@@ -39,6 +39,18 @@ The function `create_all()` creates all necessary tables in the database.
 pub async fn create_all() -> () { /* clipped */ }
 ```
 
+#### Creating ToDoTasks
+To create ToDoTasks this function should be used. 
+CURRENTLY UNTESTED
+```rust
+pub async fn create_task(
+    title: String,
+    description: Option<String>,
+    completed_at: Option<String>,
+    created_at: Option<String>,
+) -> Result<ToDoTask, DBCreateError> { /* snipped */ }
+```
+
 #### Error Types
 
 ##### DBCreateError
