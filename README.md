@@ -32,6 +32,12 @@ The function `connect()` connects the static variable `DB` to the database.
 ```rust
 pub async fn connect() -> () { /* clipped */ }
 ```
+
+#### Setting up the database
+The function `create_all()` creates all necessary tables in the database.
+```rust
+pub async fn create_all() -> () { /* clipped */ }
+```
 ### API routes
 
 ## The Plan
