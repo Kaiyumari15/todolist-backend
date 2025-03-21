@@ -1,13 +1,3 @@
-# todolist backend
- Rust backend using SurrealDB and Rocket.rs for my todolist app, 21/03/2025 -> 
-
-## Documentation
-
-### Data Structures
-
-#### ToDoTask
-Represents each ToDo Task
-```rust
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 /// Represents a ToDo task
 /// with an ID, title, description, completion status, and timestamps.
@@ -23,10 +13,3 @@ pub struct ToDoTask {
     pub completed_at: Option<String>,
     pub created_at: Option<String>,
 }
-```
-
-### Functions
-
-### API routes
-
-## The Plan
