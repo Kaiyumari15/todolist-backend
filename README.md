@@ -51,6 +51,15 @@ pub async fn create_task(
 ) -> Result<ToDoTask, DBCreateError> { /* snipped */ }
 ```
 
+#### Getting ToDoTasks
+To read ToDoTasks from the database this function should be used
+CURRENTLY UNTESTED
+```rust
+pub async fn get_task_by_id(
+    id: String,
+) -> Result<ToDoTask, DBReadError> { /* snipped */ } 
+```
+
 #### Error Types
 
 ##### DBCreateError
