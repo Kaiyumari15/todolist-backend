@@ -38,6 +38,48 @@ The function `create_all()` creates all necessary tables in the database.
 ```rust
 pub async fn create_all() -> () { /* clipped */ }
 ```
+
+#### Error Types
+
+##### DBCreateError
+The error type which will be returned when creating a task in the database.
+The String field should contain more information about the error
+```rust
+#[derive(Debug, Clone)]
+pub enum DBCreateError {
+    Permissions(String),
+    AlreadyExists(String),
+    BadData(String),
+    Other(String)
+}
+
+```
+
+##### DBEditError
+The error type which will be returned when editing a task in the database.
+The String field should contain more information about the error
+```rust
+#[derive(Debug, Clone)]
+pub enum DBEditError {
+    Permissions(String),
+    NotFound(String),
+    BadData(String),
+    Other(String)
+}
+```
+
+##### DBReadError
+The error type which will be returned when reading a task in the database.
+The String field should contain more information about the error
+```rust
+#[derive(Debug, Clone)]
+pub enum DBReadError {
+    Permissions(String),
+    NotFound(String),
+    Other(String),
+}
+
+```
 ### API routes
 
 ## The Plan
