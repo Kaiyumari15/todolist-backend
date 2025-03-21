@@ -3,7 +3,7 @@
 
 ## Documentation
 
-### Data Structures
+### Data Structures (src/model)
 
 #### ToDoTask
 Represents each ToDo Task
@@ -25,8 +25,13 @@ pub struct ToDoTask {
 }
 ```
 
-### Functions
+### Database (src/database)
 
+#### Connecting to the database 
+The function `connect()` connects the static variable `DB` to the database.
+```rust
+pub async fn connect() -> () { /* clipped */ }
+```
 ### API routes
 
 ## The Plan
