@@ -183,3 +183,22 @@ The first test checks that a `ToDoTask` can be created in the database when all 
         assert_eq!(task.created_at, Some(now_str.clone()), "Created_at mismatch");
     }
 ```
+
+This test checks that a `ToDoTask` can be created using the minimum number of required fields
+
+```rust
+    #[tokio::test]
+    async fn test_create_task_min_fields() {
+        let _ = connect().await;
+        let result = create_task("TESTtitle", None, None, None).await;
+
+        assert!(result.is_ok(), "Failed to create task with minimum fields: {:?}", result.err());
+        let task = result.unwrap();
+
+        // check each of the fields match up
+        assert_eq!(task.title, "TESTtitle", "Title mismatch");
+        assert!(task.description.is_none(), "Description should be None");
+        assert!(task.completed_at.is_none(), "Completed_at should be None");
+        assert!(task.created_at.is_some(), "Created_at should not be None");
+    }
+```
