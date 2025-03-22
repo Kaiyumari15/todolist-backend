@@ -1,12 +1,15 @@
 # todolist backend
- Rust backend using SurrealDB and Rocket.rs for my todolist app, 21/03/2025 -> 
+
+ Rust backend using SurrealDB and Rocket.rs for my todolist app, 21/03/2025 ->
 
 ## Documentation
 
 ### Data Structures (src/model)
 
 #### ToDoTask
+
 Represents each ToDo Task
+
 ```rust
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 /// Represents a ToDo task
@@ -27,21 +30,27 @@ pub struct ToDoTask {
 
 ### Database (src/database)
 
-#### Connecting to the database 
+#### Connecting to the database
+
 The function `connect()` connects the static variable `DB` to the database.
+
 ```rust
 pub async fn connect() -> () { /* clipped */ }
 ```
 
 #### Setting up the database
+
 The function `create_all()` creates all necessary tables in the database.
+
 ```rust
 pub async fn create_all() -> () { /* clipped */ }
 ```
 
 #### Creating ToDoTasks
-To create ToDoTasks this function should be used. 
+
+To create ToDoTasks this function should be used.
 CURRENTLY UNTESTED
+
 ```rust
 pub async fn create_task(
     title: String,
@@ -52,8 +61,10 @@ pub async fn create_task(
 ```
 
 #### Getting ToDoTasks
+
 To read ToDoTasks from the database this function should be used
 CURRENTLY UNTESTED
+
 ```rust
 pub async fn get_task_by_id(
     id: String,
@@ -63,8 +74,10 @@ pub async fn get_task_by_id(
 #### Error Types
 
 ##### DBCreateError
+
 The error type which will be returned when creating a task in the database.
 The String field should contain more information about the error
+
 ```rust
 #[derive(Debug, Clone)]
 pub enum DBCreateError {
@@ -77,8 +90,10 @@ pub enum DBCreateError {
 ```
 
 ##### DBEditError
+
 The error type which will be returned when editing a task in the database.
 The String field should contain more information about the error
+
 ```rust
 #[derive(Debug, Clone)]
 pub enum DBEditError {
@@ -90,8 +105,10 @@ pub enum DBEditError {
 ```
 
 ##### DBReadError
+
 The error type which will be returned when reading a task in the database.
 The String field should contain more information about the error
+
 ```rust
 #[derive(Debug, Clone)]
 pub enum DBReadError {
@@ -101,6 +118,26 @@ pub enum DBReadError {
 }
 
 ```
+
 ### API routes
 
-## The Plan
+### Unit Tests
+
+Documentation / Explanations for each of the unit tests in the project.
+
+#### database\connect
+
+These unit tests are for testing database functions relevant to connecting to the database and setting it up for use.
+
+The first test tests that the database connects successfully.
+
+```rust
+    #[tokio::test]
+    async fn test_connect_success() {
+        // Assuming the database is running
+        connect().await;
+        // If no panic occurred, the connection was successful
+    }
+```
+
+There is no need for assertions here, as any fail in the function will result in a panic. This is okay in this case because this function will only be called during development and when deploying for production, at all of these times it is a critical error.

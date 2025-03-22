@@ -1,6 +1,8 @@
 mod model;
 mod database;
+mod tests;
 
-fn main() {
+#[tokio::main]
+async fn main() {
     println!("Hello, world!");
 }
