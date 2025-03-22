@@ -7,7 +7,7 @@ pub static DB:LazyLock<Surreal<Any>> = LazyLock::new(surrealdb::Surreal::init);
 
 /// Connects the static singleton DB to the database via WS, localhost:8000
 pub async fn connect() -> () {
-    DB.connect("127.0.0.1")
+    DB.connect("ws://127.0.0.1:8000")
         .await
         .expect("Failed to connect to SurrealDB");
     DB.use_ns("Dev").await.expect("Failed to use namespace 'Dev'");

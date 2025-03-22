@@ -7,7 +7,6 @@ mod connect {
         // Assuming the database is running
         connect().await;
         // If no panic occurred, the connection was successful
-        
     }
 
     #[tokio::test]
