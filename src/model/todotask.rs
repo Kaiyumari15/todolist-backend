@@ -1,3 +1,5 @@
+use surrealdb::sql::Thing;
+
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 /// Represents a ToDo task
 /// with an ID, title, description, completion status, and timestamps.
@@ -7,7 +9,7 @@
 /// completed_at: Optional timestamp indicating when the task was completed, if is None then the task is assumed to be uncompleted
 /// created_at: Timestamp indicating when the task was created
 pub struct ToDoTask {
-    pub id: String,
+    pub id: Thing,
     pub title: String,
     pub description: Option<String>,
     pub completed_at: Option<String>,

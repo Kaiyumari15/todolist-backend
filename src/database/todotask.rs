@@ -3,25 +3,25 @@ use crate::model::todotask::ToDoTask;
 use super::{DBCreateError, DBReadError, DB};
 
 pub async fn create_task(
-    title: String,
-    description: Option<String>,
-    completed_at: Option<String>,
-    created_at: Option<String>,
+    title: &str,
+    description: Option<&str>,
+    completed_at: Option<&str>,
+    created_at: Option<&str>,
 ) -> Result<ToDoTask, DBCreateError> {
 
     let sql = "
     CREATE ToDoTask
     SET title = $title,
     description = $description,
-    completed_at = $completed_at,
-    created_at = $created_at;
+    completed_at = time::round(<datetime>$completed_at, 10ms),
+    created_at = time::round(<datetime>$created_at, 10ms);
     ";
 
     let mut response = DB.query(sql)
-        .bind(("title", title))
-        .bind(("description", description))
-        .bind(("completed_at", completed_at))
-        .bind(("created_at", created_at))
+        .bind(("title", title.to_owned()))
+        .bind(("description", description.and_then(|d| Some(d.to_owned())))) // Here I just change the &str to a String, leaving a None value untouched
+        .bind(("completed_at", completed_at.and_then(|c| Some(c.to_owned()))))
+        .bind(("created_at", created_at.and_then(|c| Some(c.to_owned()))))
         .await
         .unwrap(); // Its okay if this panics because it will only panic if the database is not connected or the query is malformed
 

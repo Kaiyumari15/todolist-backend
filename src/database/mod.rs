@@ -1,4 +1,4 @@
-mod todotask;
+pub mod todotask;
 
 use std::{fmt::Display, sync::LazyLock};
 use surrealdb::{engine::any::Any, opt::auth::Root, Surreal};
@@ -24,7 +24,7 @@ pub async fn create_all() -> () {
     DEFINE FIELD title ON TABLE ToDoTask TYPE string;
     DEFINE FIELD description ON TABLE ToDoTask TYPE option<string>;
     DEFINE FIELD completed_at ON TABLE ToDoTask TYPE option<datetime>;
-    DEFINE FIELD created_at ON TABLE ToDoTask TYPE datetime VALUE time::now();
+    DEFINE FIELD created_at ON TABLE ToDoTask TYPE datetime DEFAULT time::now();
     ")
     .await
     .expect("Failed to create table ToDoTask and fields"); // Its okay for this function to panic as it is only used when setting up the database or during testing, not during production

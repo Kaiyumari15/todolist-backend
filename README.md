@@ -20,7 +20,7 @@ Represents each ToDo Task
 /// completed_at: Optional timestamp indicating when the task was completed, if is None then the task is assumed to be uncompleted
 /// created_at: Timestamp indicating when the task was created
 pub struct ToDoTask {
-    pub id: String,
+    pub id: Thing,
     pub title: String,
     pub description: Option<String>,
     pub completed_at: Option<String>,
@@ -153,3 +153,33 @@ The next test that the database creates tables successfully.
 ```
 
 There is no need for assertions here, as any fail in the function will result in a panic. This is okay in this case because this function will only be called during development and when deploying for production, at all of these times it is a critical error.
+
+#### database\todotask
+
+The first test checks that a `ToDoTask` can be created in the database when all fields are given to the function.
+
+```rust
+    #[tokio::test]
+    async fn test_create_task_all_fields() {
+        
+        let now_str = Utc::now()
+            .duration_round(
+                TimeDelta::try_milliseconds(10)
+                .unwrap())
+            .unwrap()
+            .to_rfc3339_opts(chrono::SecondsFormat::Millis, true);
+        
+        let _ = connect().await;
+        let result = create_task("TESTtitle", Some("TESTdescription"), Some(&now_str), Some(&now_str)).await;
+        
+
+        assert!(result.is_ok(), "Failed to create task with all fields: {:?}", result.err());
+        let task = result.unwrap();
+
+        // check each of the fields match up
+        assert_eq!(task.title, "TESTtitle", "Title mismatch");
+        assert_eq!(task.description, Some("TESTdescription".to_string()), "Description mismatch");
+        assert_eq!(task.completed_at, Some(now_str.clone()), "Completed_at mismatch");
+        assert_eq!(task.created_at, Some(now_str.clone()), "Created_at mismatch");
+    }
+```
