@@ -1,7 +1,7 @@
 mod todotask;
 
 use std::{fmt::Display, sync::LazyLock};
-use surrealdb::{engine::any::Any, Surreal};
+use surrealdb::{engine::any::Any, opt::auth::Root, Surreal};
 
 pub static DB:LazyLock<Surreal<Any>> = LazyLock::new(surrealdb::Surreal::init);
 
@@ -12,6 +12,10 @@ pub async fn connect() -> () {
         .expect("Failed to connect to SurrealDB");
     DB.use_ns("Dev").await.expect("Failed to use namespace 'Dev'");
     DB.use_db("Dev").await.expect("Failed to use database 'Dev'");
+    DB.signin(Root {
+        username: "root",
+        password: "root",
+    }).await.expect("Failed to login as root user");
 }
 
 pub async fn create_all() -> () {
@@ -25,11 +29,11 @@ pub async fn create_all() -> () {
     .await
     .expect("Failed to create table ToDoTask and fields"); // Its okay for this function to panic as it is only used when setting up the database or during testing, not during production
 
-    let result = response.take_errors().is_empty();
-    if result {
+    let result = response.take_errors();
+    if result.is_empty() {
         println!("Table and fields created successfully.");
     } else {
-        println!("Failed to create table and fields: {:?}", response.take_errors());
+        panic!("Failed to create table and fields: {:?}", result);
     }
 }
 

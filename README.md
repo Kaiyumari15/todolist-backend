@@ -49,7 +49,6 @@ pub async fn create_all() -> () { /* clipped */ }
 #### Creating ToDoTasks
 
 To create ToDoTasks this function should be used.
-CURRENTLY UNTESTED
 
 ```rust
 pub async fn create_task(
@@ -57,18 +56,17 @@ pub async fn create_task(
     description: Option<String>,
     completed_at: Option<String>,
     created_at: Option<String>,
-) -> Result<ToDoTask, DBCreateError> { /* snipped */ }
+) -> Result<ToDoTask, DBCreateError> { /* clipped */ }
 ```
 
 #### Getting ToDoTasks
 
 To read ToDoTasks from the database this function should be used
-CURRENTLY UNTESTED
 
 ```rust
 pub async fn get_task_by_id(
     id: String,
-) -> Result<ToDoTask, DBReadError> { /* snipped */ } 
+) -> Result<ToDoTask, DBReadError> { /* clipped */ } 
 ```
 
 #### Error Types
@@ -137,6 +135,20 @@ The first test tests that the database connects successfully.
         // Assuming the database is running
         connect().await;
         // If no panic occurred, the connection was successful
+    }
+```
+
+There is no need for assertions here, as any fail in the function will result in a panic. This is okay in this case because this function will only be called during development and when deploying for production, at all of these times it is a critical error.
+
+The next test that the database creates tables successfully.
+
+```rust
+    #[tokio::test]
+    async fn test_create_all_success() {
+        // Assuming the database is running
+        connect().await;
+        create_all().await;
+        // If no panic occurred, the table and fields were created successfully
     }
 ```
 
