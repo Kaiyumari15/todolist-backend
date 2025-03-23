@@ -238,3 +238,15 @@ This test checks that a `ToDoTask` can be fetched using the ID
         assert_eq!(task.created_at, task2.created_at, "Created_at mismatch");
     }
 ```
+
+A test for `get_task_by_id` ensuring the correct error is given if the id does not exist
+
+```rust
+    #[tokio::test]
+    async fn test_get_task_by_id_not_found() {
+        let _ = connect().await;
+        let result = get_task_by_id("nonexistent_id").await;
+
+        assert!(result.is_err(), "Expected error when getting task by nonexistent id: {:?}", result.err());
+    }
+```

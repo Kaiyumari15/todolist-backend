@@ -69,4 +69,12 @@ mod todotask {
         assert_eq!(task.completed_at, task2.completed_at, "Completed_at mismatch");
         assert_eq!(task.created_at, task2.created_at, "Created_at mismatch");
     }
+
+    #[tokio::test]
+    async fn test_get_task_by_id_not_found() {
+        let _ = connect().await;
+        let result = get_task_by_id("nonexistent_id").await;
+
+        assert!(result.is_err(), "Expected error when getting task by nonexistent id: {:?}", result.err());
+    }
 }

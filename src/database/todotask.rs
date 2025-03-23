@@ -102,7 +102,7 @@ pub async fn get_task_by_id(
         })?;
         
     let result = result.ok_or_else(|| {
-        DBReadError::Other("Failed to get task".to_string())
+        DBReadError::NotFound("Failed to get task".to_string())
     })?;
 
     Ok(result)
