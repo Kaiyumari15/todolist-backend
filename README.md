@@ -52,10 +52,10 @@ To create ToDoTasks this function should be used.
 
 ```rust
 pub async fn create_task(
-    title: String,
-    description: Option<String>,
-    completed_at: Option<String>,
-    created_at: Option<String>,
+    title: &str,
+    description: Option<&str>,
+    completed_at: Option<&str>,
+    created_at: Option<&str>,
 ) -> Result<ToDoTask, DBCreateError> { /* clipped */ }
 ```
 
@@ -65,7 +65,7 @@ To read ToDoTasks from the database this function should be used
 
 ```rust
 pub async fn get_task_by_id(
-    id: String,
+    id: &str,
 ) -> Result<ToDoTask, DBReadError> { /* clipped */ } 
 ```
 
