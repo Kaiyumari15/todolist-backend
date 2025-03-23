@@ -42,4 +42,12 @@ mod todotask {
         assert!(task.completed_at.is_none(), "Completed_at should be None");
         assert!(task.created_at.is_some(), "Created_at should not be None");
     }
+
+    #[tokio::test]
+    async fn test_create_task_bad_data() {
+        let _ = connect().await;
+        let result = create_task("Title", None, Some("sOmeBaDdAtA"), None).await;
+
+        assert!(result.is_err(), "Expected error when creating task with bad data: {:?}", result.err());
+    }
 }
