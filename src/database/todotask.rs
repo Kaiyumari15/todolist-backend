@@ -1,5 +1,7 @@
-use crate::model::todotask::ToDoTask;
+use chrono::{DateTime, Utc};
+use surrealdb::sql::{Value, Datetime as sdbDateTime};
 
+use crate::model::todotask::ToDoTask;
 use super::{DBCreateError, DBReadError, DB};
 
 pub async fn create_task(
@@ -9,19 +11,58 @@ pub async fn create_task(
     created_at: Option<&str>,
 ) -> Result<ToDoTask, DBCreateError> {
 
-    let sql = "
+    let mut sql = String::from("
     CREATE ToDoTask
     SET title = $title,
     description = $description,
-    completed_at = time::round(<datetime>$completed_at, 10ms),
-    created_at = time::round(<datetime>$created_at, 10ms);
-    ";
+    completed_at = $completed_at,
+    created_at = $created_at;
+    ");
+
+    // Convert the times to a chrono::DateTime<Utc>, leaving None untouched
+    let completed_at: Option<DateTime<Utc>> = match completed_at {
+        Some(c) => {
+            Some(DateTime::parse_from_rfc3339(c)
+                .map_err(|e| {
+                    DBCreateError::BadData(format!("Couldn't format completed_at: {}", e.to_string()))
+                })?
+                .with_timezone(&Utc))
+        },
+        None => None,
+    };
+    let created_at: Option<DateTime<Utc>> = match created_at {
+        Some(c) => {
+            Some(DateTime::parse_from_rfc3339(c)
+                .map_err(|e| {
+                    DBCreateError::BadData(format!("Couldn't format created_at: {}", e.to_string()))
+                })?
+                .with_timezone(&Utc))
+        },
+        None => None,
+    };
+
+    // Take each value and make it a surrealdb::sql::value, if optional values are None then we set them to Value::Null
+    // I do this so i dont have to cast the type in the SQL statement, because that causes problems if the value is None
+    // This lets me keep the actual SQL as simple as possible
+    let title: Value = Value::from(title);
+    let description = match description {
+        Some(d) => Value::from(d),
+        None => Value::None,
+    };
+    let completed_at = match completed_at {
+        Some(c) => Value::Datetime(sdbDateTime::from(c)),
+        None => Value::None,
+    };
+    let created_at = match created_at {
+        Some(c) => Value::Datetime(sdbDateTime::from(c)),
+        None => Value::None,
+    };
 
     let mut response = DB.query(sql)
-        .bind(("title", title.to_owned()))
-        .bind(("description", description.and_then(|d| Some(d.to_owned())))) // Here I just change the &str to a String, leaving a None value untouched
-        .bind(("completed_at", completed_at.and_then(|c| Some(c.to_owned()))))
-        .bind(("created_at", created_at.and_then(|c| Some(c.to_owned()))))
+        .bind(("title", title))
+        .bind(("description", description)) // Here I just change the &str to a String, leaving a None value untouched
+        .bind(("completed_at", completed_at))
+        .bind(("created_at", created_at))
         .await
         .unwrap(); // Its okay if this panics because it will only panic if the database is not connected or the query is malformed
 
