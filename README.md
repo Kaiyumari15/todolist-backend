@@ -69,6 +69,16 @@ pub async fn get_task_by_id(
 ) -> Result<ToDoTask, DBReadError> { /* clipped */ } 
 ```
 
+#### Deleting ToDoTasks
+
+To delete ToDoTasks from the database by id this function should be used
+
+```rust
+pub async fn delete_task_by_id(
+    id: &str,
+) -> Result<ToDoTask, DBReadError> { /* clipped */ }
+```
+
 #### Error Types
 
 ##### DBCreateError
@@ -248,5 +258,27 @@ A test for `get_task_by_id` ensuring the correct error is given if the id does n
         let result = get_task_by_id("nonexistent_id").await;
 
         assert!(result.is_err(), "Expected error when getting task by nonexistent id: {:?}", result.err());
+    }
+```
+
+A test for `delete_task_by_id` ensuring the function correctly deletes ToDoTasks from the database
+
+```rust
+    #[tokio::test]
+    async fn test_delete_task_by_id() {
+        let _ = connect().await;
+
+        // Create a task to delete
+        let result = create_task("TESTtitle", Some("TESTdescription"), None, None).await;
+        assert!(result.is_ok(), "Failed to create task for delete test: {:?}", result.err());
+        let task = result.unwrap();
+
+        // Delete the task
+        let delete_result = delete_task_by_id(&task.id.id.to_string()).await;
+        assert!(delete_result.is_ok(), "Failed to delete task by id: {:?}", delete_result.err());
+
+        // Check the task is deleted
+        let get_result = get_task_by_id(&task.id.id.to_string()).await;
+        assert!(get_result.is_err(), "Expected error when getting deleted task: {:?}", get_result.err());
     }
 ```

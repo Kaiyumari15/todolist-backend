@@ -2,7 +2,7 @@
 mod todotask {
     use chrono::{DurationRound, TimeDelta, Utc};
     
-    use crate::database::{connect, todotask::{create_task, get_task_by_id}};
+    use crate::database::{connect, todotask::{create_task, delete_task_by_id, get_task_by_id}};
     
     
     #[tokio::test]
@@ -76,5 +76,23 @@ mod todotask {
         let result = get_task_by_id("nonexistent_id").await;
 
         assert!(result.is_err(), "Expected error when getting task by nonexistent id: {:?}", result.err());
+    }
+
+    #[tokio::test]
+    async fn test_delete_task_by_id() {
+        let _ = connect().await;
+
+        // Create a task to delete
+        let result = create_task("TESTtitle", Some("TESTdescription"), None, None).await;
+        assert!(result.is_ok(), "Failed to create task for delete test: {:?}", result.err());
+        let task = result.unwrap();
+
+        // Delete the task
+        let delete_result = delete_task_by_id(&task.id.id.to_string()).await;
+        assert!(delete_result.is_ok(), "Failed to delete task by id: {:?}", delete_result.err());
+
+        // Check the task is deleted
+        let get_result = get_task_by_id(&task.id.id.to_string()).await;
+        assert!(get_result.is_err(), "Expected error when getting deleted task: {:?}", get_result.err());
     }
 }

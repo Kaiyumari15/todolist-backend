@@ -107,3 +107,32 @@ pub async fn get_task_by_id(
 
     Ok(result)
 }
+
+pub async fn delete_task_by_id(
+    id: &str,
+) -> Result<ToDoTask, DBReadError> {
+
+    let sql = "DELETE ONLY $id RETURN BEFORE;";
+
+    // Convert the id to a surrealdb::sql::value
+    // This means I dont have to case anything in the SQL
+    // I dont have to explicitly do this but I prefer to
+    let id: Value = Thing::from(("ToDoTask", id)).into();
+
+    let mut response = DB.query(sql)
+        .bind(("id", id))
+        .await
+        .unwrap(); // Its okay if this panics because it will only panic if the database is not connected or the query is malformed
+    
+    let result: Option<ToDoTask> = response
+    .take(0)
+    .map_err(|e| {
+        DBReadError::Other(e.to_string())
+    })?;
+        
+    let result = result.ok_or_else(|| {
+        DBReadError::NotFound("Failed to delete task".to_string())
+    })?;
+
+    Ok(result)
+}
