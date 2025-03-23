@@ -2,7 +2,7 @@
 mod todotask {
     use chrono::{DurationRound, TimeDelta, Utc};
     
-    use crate::database::{todotask::create_task, connect};
+    use crate::database::{connect, todotask::{create_task, get_task_by_id}};
     
     
     #[tokio::test]
@@ -49,5 +49,24 @@ mod todotask {
         let result = create_task("Title", None, Some("sOmeBaDdAtA"), None).await;
 
         assert!(result.is_err(), "Expected error when creating task with bad data: {:?}", result.err());
+    }
+
+    #[tokio::test]
+    async fn test_get_task_by_id() {
+        let _ = connect().await;
+        let result = create_task("TESTtitle", Some("TESTdescription"), None, None).await;
+
+        assert!(result.is_ok(), "Failed to create task for get test: {:?}", result.err());
+        let task = result.unwrap();
+
+        let result = get_task_by_id(&task.id.id.to_string()).await;
+        assert!(result.is_ok(), "Failed to get task by id: {:?}", result.err());
+        let task2 = result.unwrap();
+
+        // check each of the fields match up
+        assert_eq!(task.title, task2.title, "Title mismatch");
+        assert_eq!(task.description, task2.description, "Description mismatch");
+        assert_eq!(task.completed_at, task2.completed_at, "Completed_at mismatch");
+        assert_eq!(task.created_at, task2.created_at, "Created_at mismatch");
     }
 }

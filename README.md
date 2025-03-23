@@ -202,3 +202,39 @@ This test checks that a `ToDoTask` can be created using the minimum number of re
         assert!(task.created_at.is_some(), "Created_at should not be None");
     }
 ```
+
+This test checks that a `ToDoTask` cannot be created with bad data
+
+```rust
+    #[tokio::test]
+    async fn test_create_task_bad_data() {
+        let _ = connect().await;
+        let result = create_task("Title", None, Some("sOmeBaDdAtA"), None).await;
+
+        assert!(result.is_err(), "Expected error when creating task with bad data: {:?}", result.err());
+    }
+```
+
+
+This test checks that a `ToDoTask` can be fetched using the ID
+
+```rust
+    #[tokio::test]
+    async fn test_get_task_by_id() {
+        let _ = connect().await;
+        let result = create_task("TESTtitle", Some("TESTdescription"), None, None).await;
+
+        assert!(result.is_ok(), "Failed to create task for get test: {:?}", result.err());
+        let task = result.unwrap();
+
+        let result = get_task_by_id(&task.id.id.to_string()).await;
+        assert!(result.is_ok(), "Failed to get task by id: {:?}", result.err());
+        let task2 = result.unwrap();
+
+        // check each of the fields match up
+        assert_eq!(task.title, task2.title, "Title mismatch");
+        assert_eq!(task.description, task2.description, "Description mismatch");
+        assert_eq!(task.completed_at, task2.completed_at, "Completed_at mismatch");
+        assert_eq!(task.created_at, task2.created_at, "Created_at mismatch");
+    }
+```

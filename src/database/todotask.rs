@@ -1,5 +1,5 @@
 use chrono::{DateTime, Utc};
-use surrealdb::sql::{Value, Datetime as sdbDateTime};
+use surrealdb::sql::{Value, Datetime as sdbDateTime, Thing};
 
 use crate::model::todotask::ToDoTask;
 use super::{DBCreateError, DBReadError, DB};
@@ -80,11 +80,16 @@ pub async fn create_task(
 }
 
 pub async fn get_task_by_id(
-    id: String,
+    id: &str,
 ) -> Result<ToDoTask, DBReadError> {
-    let id = format!("ToDoTask:{}", id);
 
     let sql = "SELECT * FROM $id;";
+
+    // Convert the id to a surrealdb::sql::value
+    // This means I dont have to case anything in the SQL
+    // I dont have to explicitly do this but I prefer to
+    let id: Value = Thing::from(("ToDoTask", id)).into();
+
     let mut response = DB.query(sql)
         .bind(("id", id))
         .await
