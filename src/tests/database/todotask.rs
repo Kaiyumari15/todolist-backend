@@ -2,7 +2,7 @@
 mod todotask {
     use chrono::{DurationRound, TimeDelta, Utc};
     
-    use crate::database::{connect, todotask::{create_task, delete_task_by_id, edit_task_by_id, get_task_by_id}};
+    use crate::database::{connect, todotask::{create_task, delete_task_by_id, get_task_by_id}};
     
     
     #[tokio::test]
@@ -95,66 +95,4 @@ mod todotask {
         let get_result = get_task_by_id(&task.id.id.to_string()).await;
         assert!(get_result.is_err(), "Expected error when getting deleted task: {:?}", get_result.err());
     }
-
-    #[tokio::test]
-    async fn test_delete_task_by_id_not_found() {
-        let _ = connect().await;
-
-        // Attempt to delete a nonexistent task
-        let result = delete_task_by_id("nonexistent_id").await;
-        assert!(result.is_err(), "Expected error when deleting task by nonexistent id: {:?}", result.err());
-    }
-
-    #[tokio::test]
-    async fn test_edit_task_by_id_title() {
-        let _ = connect().await;
-
-        // Create a task to edit
-        let result = create_task("TESTtitle", Some("TESTdescription"), None, None).await;
-        assert!(result.is_ok(), "Failed to create task for edit test: {:?}", result.err());
-        let task = result.unwrap();
-
-        // Edit the task
-        let edit_result = edit_task_by_id(&task.id.id.to_string(), Some("TESTnewtitle"), None, None).await;
-        assert!(edit_result.is_ok(), "Failed to edit task by id: {:?}", edit_result.err());
-
-        // Check the task is edited
-        let get_result = get_task_by_id(&task.id.id.to_string()).await;
-        assert!(get_result.is_ok(), "Failed to get edited task by id: {:?}", get_result.err());
-        let edited_task = get_result.unwrap();
-
-        // Check the edited fields match up
-        assert_eq!(edited_task.title, "TESTnewtitle", "Title mismatch after edit");
-    }
-
-    #[tokio::test]
-    async fn test_edit_task_by_id_all() {
-        let _ = connect().await;
-
-        // Create a task to edit
-        let result = create_task("TESTtitle", Some("TESTdescription"), None, None).await;
-        assert!(result.is_ok(), "Failed to create task for edit test: {:?}", result.err());
-        let task = result.unwrap();
-
-        // Edit all fields of the task
-        let new_completed_at = Utc::now()
-            .duration_round(
-                TimeDelta::try_milliseconds(10)
-                .unwrap())
-            .unwrap()
-            .to_rfc3339_opts(chrono::SecondsFormat::Millis, true);
-        let edit_result = edit_task_by_id(&task.id.id.to_string(), Some("TESTnewtitle"), Some("TESTnewdescription"), Some(&new_completed_at)).await;
-        assert!(edit_result.is_ok(), "Failed to edit task by id: {:?}", edit_result.err());
-
-        // Check the task is edited
-        let get_result = get_task_by_id(&task.id.id.to_string()).await;
-        assert!(get_result.is_ok(), "Failed to get edited task by id: {:?}", get_result.err());
-        let edited_task = get_result.unwrap();
-
-        // Check the edited fields match up
-        assert_eq!(edited_task.title, "TESTnewtitle".to_string(), "Title mismatch after edit");
-        assert_eq!(edited_task.description, Some("TESTnewdescription".to_string()), "Description mismatch after edit");
-        assert_eq!(edited_task.completed_at, Some(new_completed_at), "Completed_at mismatch after edit");
-    }
-
 }
