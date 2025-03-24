@@ -22,7 +22,7 @@ mod todotask {
         let task = result.unwrap();
 
         // check each of the fields match up
-        assert_eq!(task.title, "TESTtitle", "Title mismatch");
+        assert_eq!(task.title, Some("TESTtitle".to_string()), "Title mismatch");
         assert_eq!(task.description, Some("TESTdescription".to_string()), "Description mismatch");
         assert_eq!(task.completed_at, Some(now_str.clone()), "Completed_at mismatch");
         assert_eq!(task.created_at, Some(now_str.clone()), "Created_at mismatch");
@@ -37,7 +37,7 @@ mod todotask {
         let task = result.unwrap();
 
         // check each of the fields match up
-        assert_eq!(task.title, "TESTtitle", "Title mismatch");
+        assert_eq!(task.title, Some("TESTtitle".to_string()), "Title mismatch");
         assert!(task.description.is_none(), "Description should be None");
         assert!(task.completed_at.is_none(), "Completed_at should be None");
         assert!(task.created_at.is_some(), "Created_at should not be None");
@@ -59,7 +59,7 @@ mod todotask {
         assert!(result.is_ok(), "Failed to create task for get test: {:?}", result.err());
         let task = result.unwrap();
 
-        let result = get_task_by_id(&task.id.id.to_string()).await;
+        let result = get_task_by_id(&task.id.unwrap().id.to_string()).await;
         assert!(result.is_ok(), "Failed to get task by id: {:?}", result.err());
         let task2 = result.unwrap();
 
@@ -88,11 +88,11 @@ mod todotask {
         let task = result.unwrap();
 
         // Delete the task
-        let delete_result = delete_task_by_id(&task.id.id.to_string()).await;
+        let delete_result = delete_task_by_id(&task.id.clone().unwrap().id.to_string()).await;
         assert!(delete_result.is_ok(), "Failed to delete task by id: {:?}", delete_result.err());
 
         // Check the task is deleted
-        let get_result = get_task_by_id(&task.id.id.to_string()).await;
+        let get_result = get_task_by_id(&task.id.unwrap().id.to_string()).await;
         assert!(get_result.is_err(), "Expected error when getting deleted task: {:?}", get_result.err());
     }
 
@@ -115,16 +115,16 @@ mod todotask {
         let task = result.unwrap();
 
         // Edit the task
-        let edit_result = edit_task_by_id(&task.id.id.to_string(), Some("TESTnewtitle"), None, None).await;
+        let edit_result = edit_task_by_id(&task.id.clone().unwrap().id.to_string(), Some("TESTnewtitle"), None, None).await;
         assert!(edit_result.is_ok(), "Failed to edit task by id: {:?}", edit_result.err());
 
         // Check the task is edited
-        let get_result = get_task_by_id(&task.id.id.to_string()).await;
+        let get_result = get_task_by_id(&task.id.unwrap().id.to_string()).await;
         assert!(get_result.is_ok(), "Failed to get edited task by id: {:?}", get_result.err());
         let edited_task = get_result.unwrap();
 
         // Check the edited fields match up
-        assert_eq!(edited_task.title, "TESTnewtitle", "Title mismatch after edit");
+        assert_eq!(edited_task.title, Some("TESTnewtitle".to_string()), "Title mismatch after edit");
     }
 
     #[tokio::test]
@@ -143,16 +143,16 @@ mod todotask {
                 .unwrap())
             .unwrap()
             .to_rfc3339_opts(chrono::SecondsFormat::Millis, true);
-        let edit_result = edit_task_by_id(&task.id.id.to_string(), Some("TESTnewtitle"), Some("TESTnewdescription"), Some(&new_completed_at)).await;
+        let edit_result = edit_task_by_id(&task.id.clone().unwrap().id.to_string(), Some("TESTnewtitle"), Some("TESTnewdescription"), Some(&new_completed_at)).await;
         assert!(edit_result.is_ok(), "Failed to edit task by id: {:?}", edit_result.err());
 
         // Check the task is edited
-        let get_result = get_task_by_id(&task.id.id.to_string()).await;
+        let get_result = get_task_by_id(&task.id.unwrap().id.to_string()).await;
         assert!(get_result.is_ok(), "Failed to get edited task by id: {:?}", get_result.err());
         let edited_task = get_result.unwrap();
 
         // Check the edited fields match up
-        assert_eq!(edited_task.title, "TESTnewtitle".to_string(), "Title mismatch after edit");
+        assert_eq!(edited_task.title, Some("TESTnewtitle".to_string()), "Title mismatch after edit");
         assert_eq!(edited_task.description, Some("TESTnewdescription".to_string()), "Description mismatch after edit");
         assert_eq!(edited_task.completed_at, Some(new_completed_at), "Completed_at mismatch after edit");
     }

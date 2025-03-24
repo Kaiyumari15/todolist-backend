@@ -9,8 +9,8 @@ use surrealdb::sql::Thing;
 /// completed_at: Optional timestamp indicating when the task was completed, if is None then the task is assumed to be uncompleted
 /// created_at: Timestamp indicating when the task was created
 pub struct ToDoTask {
-    pub id: Thing,
-    pub title: String,
+    pub id: Option<Thing>,
+    pub title: Option<String>,
     pub description: Option<String>,
     pub completed_at: Option<String>,
     pub created_at: Option<String>,
