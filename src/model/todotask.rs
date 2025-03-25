@@ -15,3 +15,13 @@ pub struct ToDoTask {
     pub completed_at: Option<String>,
     pub created_at: Option<String>,
 }
+
+impl std::fmt::Display for ToDoTask {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "ToDoTask {{ id: {:?}, title: {:?}, description: {:?}, completed_at: {:?}, created_at: {:?} }}",
+            self.id, self.title, self.description, self.completed_at, self.created_at
+        )
+    }
+}

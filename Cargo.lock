@@ -3048,6 +3048,7 @@ dependencies = [
  "rocket_codegen",
  "rocket_http",
  "serde",
+ "serde_json",
  "state",
  "tempfile",
  "time",
@@ -4006,6 +4007,7 @@ dependencies = [
  "chrono",
  "rocket",
  "serde",
+ "serde_json",
  "surrealdb",
  "tokio",
 ]

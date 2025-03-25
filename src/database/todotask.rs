@@ -60,7 +60,7 @@ pub async fn create_task(
 
     let mut response = DB.query(sql)
         .bind(("title", title))
-        .bind(("description", description)) // Here I just change the &str to a String, leaving a None value untouched
+        .bind(("description", description)) 
         .bind(("completed_at", completed_at))
         .bind(("created_at", created_at))
         .await
@@ -170,7 +170,7 @@ pub async fn edit_task_by_id(
     let mut response = DB.query(sql)
         .bind(("id", id))
         .bind(("title", title))
-        .bind(("description", description)) // Here I just change the &str to a String, leaving a None
+        .bind(("description", description)) 
         .bind(("completed_at", completed_at))
         .await
         .unwrap(); // Its okay if this panics because it will only panic if the database is not connected or the query is malformed
