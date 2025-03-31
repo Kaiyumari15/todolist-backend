@@ -5,18 +5,22 @@ use crate::model::todotask::ToDoTask;
 use super::{DBCreateError, DBEditError, DBReadError, DB};
 
 pub async fn create_task(
+    requester: &str,
     title: &str,
     description: Option<&str>,
     completed_at: Option<&str>,
     created_at: Option<&str>,
 ) -> Result<ToDoTask, DBCreateError> {
 
+    let requester: Value = Thing::from(("User", requester)).into();
+    
     let mut sql = String::from("
     CREATE ToDoTask
     SET title = $title,
     description = $description,
     completed_at = $completed_at,
-    created_at = $created_at;
+    created_at = $created_at,
+    owner = $requester;
     ");
 
     // Convert the times to a chrono::DateTime<Utc>, leaving None untouched
@@ -63,6 +67,7 @@ pub async fn create_task(
         .bind(("description", description)) 
         .bind(("completed_at", completed_at))
         .bind(("created_at", created_at))
+        .bind(("requester", requester))
         .await
         .unwrap(); // Its okay if this panics because it will only panic if the database is not connected or the query is malformed
 

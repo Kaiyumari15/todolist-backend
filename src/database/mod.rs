@@ -24,6 +24,7 @@ pub async fn create_all() -> () {
     DEFINE TABLE ToDoTask SCHEMAFULL; 
     DEFINE FIELD title ON TABLE ToDoTask TYPE string;
     DEFINE FIELD description ON TABLE ToDoTask TYPE option<string>;
+    DEFINE FIELD owner ON TABLE ToDoTask TYPE record<User>;
     DEFINE FIELD completed_at ON TABLE ToDoTask TYPE option<datetime>;
     DEFINE FIELD created_at ON TABLE ToDoTask TYPE datetime DEFAULT time::now();
 

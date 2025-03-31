@@ -12,6 +12,7 @@ pub struct ToDoTask {
     pub id: Option<Thing>,
     pub title: Option<String>,
     pub description: Option<String>,
+    pub owner: Option<Thing>,
     pub completed_at: Option<String>,
     pub created_at: Option<String>,
 }
