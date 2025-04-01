@@ -230,3 +230,32 @@ pub async fn delete_task_by_id(
 
     Ok(result)
 }
+
+pub async fn check_is_owner(requester_id: &str, task_id: &str) -> Result<bool, DBReadError> {
+    let sql = "SELECT owner FROM $id;";
+
+    // Convert the id to a surrealdb::sql::value
+    // This means I dont have to case anything in the SQL
+    // I dont have to explicitly do this but I prefer to
+    let id: Value = Thing::from(("ToDoTask", task_id)).into();
+
+    let mut response = DB.query(sql)
+        .bind(("id", id))
+        .await
+        .unwrap(); // Its okay if this panics because it will only panic if the database is not connected or the query is malformed
+
+        // get the owner of the task
+    let result: Option<ToDoTask> = response
+        .take(0)
+        .map_err(|e| {
+            DBReadError::Other(e.to_string())
+        })?;
+        
+        // check if the result is None and return an error if it is
+    let result = result.ok_or_else(|| {
+        DBReadError::NotFound("Failed to get task".to_string())
+    })?;
+
+        // check if the owner of the task is the same as the requester
+    Ok(result.owner.unwrap().id.to_string() == requester_id.to_string())
+}
