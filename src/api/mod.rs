@@ -1,6 +1,7 @@
 use rocket::Responder;
 
 pub mod todotask;
+pub mod auth;
 
 #[derive(Debug, Responder)]
 pub enum Response<T> {
