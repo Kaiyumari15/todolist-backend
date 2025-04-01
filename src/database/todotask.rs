@@ -5,22 +5,22 @@ use crate::model::todotask::ToDoTask;
 use super::{DBCreateError, DBEditError, DBReadError, DB};
 
 pub async fn create_task(
-    requester: &str,
+    owner: &str,
     title: &str,
     description: Option<&str>,
     completed_at: Option<&str>,
     created_at: Option<&str>,
 ) -> Result<ToDoTask, DBCreateError> {
 
-    let requester: Value = Thing::from(("User", requester)).into();
+    let owner: Value = Thing::from(("User", owner)).into();
     
-    let mut sql = String::from("
+    let sql = String::from("
     CREATE ToDoTask
     SET title = $title,
     description = $description,
     completed_at = $completed_at,
     created_at = $created_at,
-    owner = $requester;
+    owner = $owner;
     ");
 
     // Convert the times to a chrono::DateTime<Utc>, leaving None untouched
@@ -67,7 +67,7 @@ pub async fn create_task(
         .bind(("description", description)) 
         .bind(("completed_at", completed_at))
         .bind(("created_at", created_at))
-        .bind(("requester", requester))
+        .bind(("owner", owner))
         .await
         .unwrap(); // Its okay if this panics because it will only panic if the database is not connected or the query is malformed
 
@@ -118,6 +118,7 @@ pub async fn edit_task_by_id(
     title: Option<&str>,
     description: Option<&str>,
     completed_at: Option<&str>,
+    owner: Option<&str>,
 ) -> Result<ToDoTask, DBEditError> {
 
     let mut sql = String::from("UPDATE $id SET ");
@@ -160,6 +161,13 @@ pub async fn edit_task_by_id(
         },
         None => Value::None,
     };
+    let owner = match owner {
+        Some(o) => {
+            sql.push_str("owner = $owner, ");
+            Value::Thing(Thing::from(("User", o)))
+        },
+        None => Value::None,
+    };
 
     // Remove the last comma and space from the SQL string
     sql.pop();
@@ -177,6 +185,7 @@ pub async fn edit_task_by_id(
         .bind(("title", title))
         .bind(("description", description)) 
         .bind(("completed_at", completed_at))
+        .bind(("owner", owner))
         .await
         .unwrap(); // Its okay if this panics because it will only panic if the database is not connected or the query is malformed
 
