@@ -2,7 +2,7 @@ use surrealdb::sql::{Value, Thing};
 
 use crate::model::users::User;
 
-use super::{DBCreateError, DBEditError, DB};
+use super::{DBCreateError, DBEditError, DBReadError, DB};
 
 pub async fn create_user(username: &str, email: &str, password: &str) -> Result<User, DBCreateError> {
     // Create the query
@@ -41,6 +41,68 @@ pub async fn create_user(username: &str, email: &str, password: &str) -> Result<
     // Check if the result is None and return an error if it is
     if result.is_none() {
         return Err(DBCreateError::Other("Failed to create user".to_string()));
+    }
+    let result = result.unwrap();
+
+    // Return the User struct
+    Ok(result)
+}
+
+pub async fn compare_username_password(username: &str, password: &str) -> Result<User, DBReadError> {
+    // Create the query
+    let sql = "SELECT * FROM User WHERE username = $username AND password = $password;";
+
+    // Convert the inputs 
+    let username = Value::from(username);
+    let password = Value::from(password);
+
+    let mut response = DB.query(sql)
+        .bind(("username", username))
+        .bind(("password", password))
+        .await
+        .unwrap(); // Its okay if this panics because it will only panic if the database is not connected or the query is malformed
+
+    // Take the first result and convert it to a User
+    let result: Option<User> = response
+        .take(0)
+        .map_err(|e| {
+            DBReadError::Other(e.to_string())
+        })?;
+
+    // Check if the result is None and return an error if it is
+    if result.is_none() {
+        return Err(DBReadError::NotFound("Failed to get user".to_string()));
+    }
+    let result = result.unwrap();
+
+    // Return the User struct
+    Ok(result)
+}
+
+pub async fn compare_email_password(email: &str, password: &str) -> Result<User, DBReadError> {
+    // Create the query
+    let sql = "SELECT * FROM User WHERE email = $email AND password = $password;";
+
+    // Convert the inputs 
+    let email = Value::from(email);
+    let password = Value::from(password);
+
+    let mut response = DB.query(sql)
+        .bind(("email", email))
+        .bind(("password", password))
+        .await
+        .unwrap(); // Its okay if this panics because it will only panic if the database is not connected or the query is malformed
+
+    // Take the first result and convert it to a User
+    let result: Option<User> = response
+        .take(0)
+        .map_err(|e| {
+            DBReadError::Other(e.to_string())
+        })?;
+
+    // Check if the result is None and return an error if it is
+    if result.is_none() {
+        return Err(DBReadError::NotFound("Failed to get user".to_string()));
     }
     let result = result.unwrap();
 
