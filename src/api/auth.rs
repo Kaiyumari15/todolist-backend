@@ -46,7 +46,7 @@ pub async fn verify_token(token: &str) -> String {
         &*PUBLIC_KEY,
         &jsonwebtoken::Validation::new(Algorithm::HS512),
     )
-    .expect("Failed to decode token");
+    .expect("Failed to decode token"); // This will need to be changed to handle errors proper;y
 
     // Return the user ID from the claims
     token_data.claims.sub
