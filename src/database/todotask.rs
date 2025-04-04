@@ -149,10 +149,6 @@ pub async fn edit_task_by_id(
     owner: Option<&str>,
 ) -> Result<ToDoTask, DBEditError> {
 
-    // Check if the user is the owner of the task
-    // This is done in the SQL statement so that we dont have to do a second query to check if the user is the owner
-    let check_perms_sql = String::from("IF $id.owner != $owner THEN throw \"Permissions('You do not have permission to edit this task') END;");
-
     let mut sql = String::from("UPDATE $id SET ");
 
     // Convert the times to a chrono::DateTime<Utc>, leaving None untouched
@@ -207,17 +203,12 @@ pub async fn edit_task_by_id(
     // Add a semicolon to the end of the SQL string 
     sql.push_str(";");
 
-    let final_sql = format!("BEGIN TRANSACTION;
-    {}
-    {}
-    COMMIT TRANSACTION;", check_perms_sql, sql);
-
     // Convert the id to a surrealdb::sql::value
     // This means I dont have to case anything in the SQL
     // I dont have to explicitly do this but I prefer to
     let id: Value = Thing::from(("ToDoTask", id)).into();
 
-    let mut response = DB.query(final_sql)
+    let mut response = DB.query(sql)
         .bind(("id", id))
         .bind(("title", title))
         .bind(("description", description)) 
@@ -242,6 +233,7 @@ pub async fn edit_task_by_id(
 pub async fn delete_task_by_id(
     id: &str,
 ) -> Result<ToDoTask, DBReadError> {
+
 
     let sql = "DELETE ONLY $id RETURN BEFORE;";
 
@@ -272,7 +264,7 @@ pub async fn check_is_owner(requester_id: &str, task_id: &str) -> Result<bool, D
     let sql = "SELECT owner FROM $id;";
 
     // Convert the id to a surrealdb::sql::value
-    // This means I dont have to case anything in the SQL
+    // This means I dont have to cast anything in the SQL
     // I dont have to explicitly do this but I prefer to
     let id: Value = Thing::from(("ToDoTask", task_id)).into();
 
