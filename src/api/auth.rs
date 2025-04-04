@@ -2,7 +2,7 @@ use std::sync::LazyLock;
 
 use chrono::Duration;
 use jsonwebtoken::{encode, Algorithm, DecodingKey, EncodingKey, Header};
-use rocket::futures::future::Lazy;
+use rocket::{futures::future::Lazy, request::FromRequest};
 use serde::{Deserialize, Serialize};
 
 static PUBLIC_KEY: LazyLock<DecodingKey> = LazyLock::new(|| {
@@ -50,4 +50,29 @@ pub async fn verify_token(token: &str) -> String {
 
     // Return the user ID from the claims
     token_data.claims.sub
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct JWT {
+    pub token: String,
+}
+
+#[rocket::async_trait]
+impl<'r> FromRequest<'r> for JWT {
+    type Error = std::io::Error;
+    
+    async fn from_request(request: &'r rocket::request::Request<'_>) -> rocket::request::Outcome<Self, Self::Error> {
+        // Check if the Authorization header is present
+        match request.headers().get_one("Authorization") {
+            Some(token) => {
+                let token = token[7..].to_string(); 
+                rocket::request::Outcome::Success(JWT { token })
+            }
+            _ => {
+                rocket::request::Outcome::Error(
+                    (rocket::http::Status::Unauthorized, std::io::Error::new(std::io::ErrorKind::PermissionDenied, "Missing or invalid Authorization header")),
+                )
+            }
+        }
+    }
 }
