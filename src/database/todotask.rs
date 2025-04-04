@@ -113,6 +113,34 @@ pub async fn get_task_by_id(
     Ok(result)
 }
 
+pub async fn get_all_tasks_by_user(
+    user_id: &str,
+) -> Result<Vec<ToDoTask>, DBReadError> {
+
+    // Make the SQL statement
+    let sql = "SELECT * FROM ToDoTask WHERE owner = $owner;";
+
+    // Convert the id to a surrealdb::sql::value
+    let owner: Value = Thing::from(("User", user_id)).into();
+
+    // Make the query and bind the id to the SQL statement
+    let mut response = DB.query(sql)
+        .bind(("owner", owner))
+        .await
+        .unwrap(); // Its okay if this panics because it will only panic if the database is not connected or the query is malformed
+
+    // Take the response and convert it to a Vec<ToDoTask>
+    let result: Vec<ToDoTask> = response
+        .take(0)
+        .map_err(|e| {
+            DBReadError::Other(e.to_string())
+        })?;
+
+    // Return the vec of tasks
+    Ok(result)
+
+}
+
 pub async fn edit_task_by_id(
     id: &str,
     title: Option<&str>,
