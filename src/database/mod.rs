@@ -50,7 +50,6 @@ pub async fn create_all() -> () {
 #[derive(Debug, Clone)]
 /// The error type which will be returned when creating a task in the database
 pub enum DBCreateError {
-    Permissions(String),
     AlreadyExists(String),
     BadData(String),
     Other(String)
@@ -59,7 +58,6 @@ pub enum DBCreateError {
 #[derive(Debug, Clone)]
 /// The error type which will be returned when editing a task in the database
 pub enum DBEditError {
-    Permissions(String),
     NotFound(String),
     BadData(String),
     Other(String)
@@ -68,7 +66,6 @@ pub enum DBEditError {
 #[derive(Debug, Clone)]
 /// The error type which will be returned when reading a task in the database
 pub enum DBReadError {
-    Permissions(String),
     NotFound(String),
     Other(String),
 }
@@ -76,7 +73,6 @@ pub enum DBReadError {
 impl Display for DBCreateError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            DBCreateError::Permissions(msg) => write!(f, "Permissions error: {}", msg),
             DBCreateError::AlreadyExists(msg) => write!(f, "Already exists error: {}", msg),
             DBCreateError::BadData(msg) => write!(f, "Bad data error: {}", msg),
             DBCreateError::Other(msg) => write!(f, "Other error: {}", msg),
@@ -87,7 +83,6 @@ impl Display for DBCreateError {
 impl Display for DBEditError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            DBEditError::Permissions(msg) => write!(f, "Permissions error: {}", msg),
             DBEditError::NotFound(msg) => write!(f, "Not found error: {}", msg),
             DBEditError::BadData(msg) => write!(f, "Bad data error: {}", msg),
             DBEditError::Other(msg) => write!(f, "Other error: {}", msg),
@@ -98,7 +93,6 @@ impl Display for DBEditError {
 impl Display for DBReadError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            DBReadError::Permissions(msg) => write!(f, "Permissions error: {}", msg),
             DBReadError::NotFound(msg) => write!(f, "Not found error: {}", msg),
             DBReadError::Other(msg) => write!(f, "Other error: {}", msg),
         }

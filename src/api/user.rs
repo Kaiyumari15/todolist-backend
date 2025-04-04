@@ -40,7 +40,6 @@ pub async fn create_user_handler(
     if created_user.is_err() {
         let err = created_user.unwrap_err();
         return match err {
-            crate::database::DBCreateError::Permissions(_) => Response::Forbidden("You do not have permission to create this user".to_string()),
             crate::database::DBCreateError::AlreadyExists(_) => Response::BadRequest("This user already exists".to_string()),
             crate::database::DBCreateError::BadData(_) => Response::BadRequest("The data provided is invalid".to_string()),
             crate::database::DBCreateError::Other(_) => {

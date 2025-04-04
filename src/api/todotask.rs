@@ -1,6 +1,6 @@
 use chrono::format;
 use rocket::{post, patch, delete, serde::json::Json};
-use crate::database::todotask::{create_task, delete_task_by_id, edit_task_by_id};
+use crate::database::todotask::{check_is_owner, create_task, delete_task_by_id, edit_task_by_id};
 use crate::model::todotask::ToDoTask;
 use super::Response;
 
@@ -28,7 +28,6 @@ pub async fn create_task_handler(
     if created_task.is_err() {
         let err = created_task.unwrap_err();
         return match err {
-            crate::database::DBCreateError::Permissions(_) => Response::Forbidden("You do not have permission to create this task".to_string()),
             crate::database::DBCreateError::AlreadyExists(_) => Response::BadRequest("This task already exists".to_string()),
             crate::database::DBCreateError::BadData(_) => Response::BadRequest("The data provided is invalid".to_string()),
             crate::database::DBCreateError::Other(_) => {
@@ -53,15 +52,39 @@ pub async fn update_task_handler(task_id: &str, update_task: Json<ToDoTask>) -> 
     let title = update_task.title.as_deref();
     let description = update_task.description.as_deref();
     let completed_at = update_task.completed_at.as_deref();
+    let owner = update_task.owner.and_then(|owner| Some(owner.id.to_string()));
+    let owner = owner.as_deref();
 
+    // Check if the user is the owner of the task -> THIS WILL CHANGE to use the JWT token
+    // This is a temporary solution until we have JWT authentication
+    if owner.is_none() {
+        return Response::Unauthorized("Sign in".to_string());
+    }
+
+    let is_owner = check_is_owner(task_id, owner.unwrap()).await;
+
+    if is_owner.is_err() {
+        let err = is_owner.unwrap_err();
+        return match err {
+            crate::database::DBReadError::NotFound(_) => Response::NotFound("Task not found".to_string()),
+            crate::database::DBReadError::Other(_) => {
+                dbg!("Unhandled/Unkown error checking owner: {:?}", err);
+                Response::InternalServerError("There was an unkown error".to_string())
+            }
+        }
+    }
+
+    if !is_owner.unwrap() {
+        return Response::Forbidden("You do not have permissions".to_string());
+    }
+    
     // Update the task in the DB
-    let updated_task = edit_task_by_id(task_id, title, description, completed_at).await;
+    let updated_task = edit_task_by_id(task_id, title, description, completed_at, owner).await;
 
     // If there was an error handle it
     if updated_task.is_err() {
         let err = updated_task.unwrap_err();
         return match err {
-            crate::database::DBEditError::Permissions(_) => Response::Forbidden("You do not have permission to edit this ToDoTask".to_string()),
             crate::database::DBEditError::NotFound(_) => Response::BadRequest("ToDoItem not found".to_string()),
             crate::database::DBEditError::BadData(wrapped_err) => Response::BadRequest(format!("Invalid data: {}", wrapped_err).to_string()),
             crate::database::DBEditError::Other(wrapped_err) => { // If the error is unkown log it and return Status 500
@@ -87,7 +110,6 @@ pub async fn delete_task_handler(task_id: &str) -> super::Response<Json<ToDoTask
         let err = deleted_task.unwrap_err();
         return match err {
             crate::database::DBReadError::NotFound(_) => Response::NotFound("Task not found".to_string()),
-            crate::database::DBReadError::Permissions(_) => Response::Forbidden("You do not have permission to delete this task".to_string()),
             crate::database::DBReadError::Other(_) => {
                 dbg!("Unhandled/Unkown error deleting task: {:?}", err);
                 Response::InternalServerError("There was an unkown error".to_string())
