@@ -79,7 +79,7 @@ impl<'r> FromRequest<'r> for JWT {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
 /// The error type which will be returned when verifying a JWT token
 pub enum VerifyJWTError {
     Malformed,
