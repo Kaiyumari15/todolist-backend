@@ -12,7 +12,11 @@ pub async fn create_task_handler(
     let input_task = input_task.into_inner(); // Deserialise the input from JSON
 
     // Verify the token & extract the user ID from it
-    let user_id = verify_token(&jwt.token).await; // This will panic if there is an issue with jwt this will need to be updated
+    let user_id = verify_token(&jwt.token).await; 
+    if user_id.is_err() {
+        return Response::Unauthorized("Invalid token".to_string())
+    }
+    let user_id = user_id.unwrap().sub; // Extract the user ID from the token
 
     // Option<String> -> Option<&str>
     let title = input_task.title.as_deref();
@@ -54,6 +58,10 @@ pub async fn update_task_handler(task_id: &str, update_task: Json<ToDoTask>, jwt
 
     // Verify the token and extracrt the user id 
     let user_id = verify_token(&jwt.token).await;
+    if user_id.is_err() {
+        return Response::Unauthorized("Invalid token".to_string())
+    }
+    let user_id = user_id.unwrap().sub;
 
     // Option<String> -> Option<&str>
     let title = update_task.title.as_deref();
@@ -107,6 +115,10 @@ pub async fn update_task_handler(task_id: &str, update_task: Json<ToDoTask>, jwt
 pub async fn delete_task_handler(task_id: &str, jwt: JWT) -> super::Response<Json<ToDoTask>> {
     // Verify the JWT
     let user_id = verify_token(&jwt.token).await;
+    if user_id.is_err() {
+        return Response::Unauthorized("Unauthorised".to_string())
+    }
+    let user_id = user_id.unwrap().sub; // Extract the user ID from the token
 
     // Check if the user is the owner
     let is_owner = check_is_owner(&user_id, task_id).await;

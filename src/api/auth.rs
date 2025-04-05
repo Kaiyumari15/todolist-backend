@@ -39,20 +39,22 @@ pub async fn generate_token(user_id: &str, duration: Duration) -> String {
     token
 }
 
-pub async fn verify_token(token: &str) -> String {
+pub async fn verify_token(token: &str) -> Result<Claims, VerifyJWTError> {
     // Decode the token using the public key
     let token_data = jsonwebtoken::decode::<Claims>(
         token,
         &*PUBLIC_KEY,
         &jsonwebtoken::Validation::new(Algorithm::HS512),
     )
-    .expect("Failed to decode token"); // This will need to be changed to handle errors proper;y
+    .map_err(|error| {
+        VerifyJWTError::Other(error.to_string())
+    })?;
 
-    // Return the user ID from the claims
-    token_data.claims.sub
+    // Return the claims
+    Ok(token_data.claims)
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct JWT {
     pub token: String,
 }
@@ -75,4 +77,12 @@ impl<'r> FromRequest<'r> for JWT {
             }
         }
     }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+/// The error type which will be returned when verifying a JWT token
+pub enum VerifyJWTError {
+    Malformed,
+    Expired,
+    Other(String),
 }
