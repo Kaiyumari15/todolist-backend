@@ -1,14 +1,18 @@
-use chrono::format;
 use rocket::{post, patch, delete, serde::json::Json};
 use crate::database::todotask::{check_is_owner, create_task, delete_task_by_id, edit_task_by_id};
 use crate::model::todotask::ToDoTask;
+use super::auth::{verify_token, JWT};
 use super::Response;
 
 #[post("/tasks", data = "<input_task>")]
 pub async fn create_task_handler(
-    input_task: Json<ToDoTask>
+    input_task: Json<ToDoTask>,
+    jwt: JWT,
 ) -> Response<Json<ToDoTask>> {
     let input_task = input_task.into_inner(); // Deserialise the input from JSON
+
+    // Verify the token & extract the user ID from it
+    let user_id = verify_token(&jwt.token).await; // This will panic if there is an issue with jwt this will need to be updated
 
     // Option<String> -> Option<&str>
     let title = input_task.title.as_deref();
@@ -22,7 +26,7 @@ pub async fn create_task_handler(
     let title = title.unwrap();
 
     // Create the task 
-    let created_task = create_task(title, description, completed_at, None).await;
+    let created_task = create_task(&user_id, title, description, None, None).await;
 
     // Check if there was an error
     if created_task.is_err() {
@@ -43,25 +47,24 @@ pub async fn create_task_handler(
 }
 
 #[patch("/tasks/<task_id>", data="<update_task>")]
-pub async fn update_task_handler(task_id: &str, update_task: Json<ToDoTask>) -> super::Response<Json<ToDoTask>> {
+pub async fn update_task_handler(task_id: &str, update_task: Json<ToDoTask>, jwt: JWT) -> super::Response<Json<ToDoTask>> {
 
     // Deserialise the input from JSON
     let update_task = update_task.into_inner();
+
+    // Verify the token and extracrt the user id 
+    let user_id = verify_token(&jwt.token).await;
 
     // Option<String> -> Option<&str>
     let title = update_task.title.as_deref();
     let description = update_task.description.as_deref();
     let completed_at = update_task.completed_at.as_deref();
-    let owner = update_task.owner.and_then(|owner| Some(owner.id.to_string()));
-    let owner = owner.as_deref();
+    let owner = &user_id;
 
     // Check if the user is the owner of the task -> THIS WILL CHANGE to use the JWT token
     // This is a temporary solution until we have JWT authentication
-    if owner.is_none() {
-        return Response::Unauthorized("Sign in".to_string());
-    }
 
-    let is_owner = check_is_owner(task_id, owner.unwrap()).await;
+    let is_owner = check_is_owner(task_id, owner).await;
 
     if is_owner.is_err() {
         let err = is_owner.unwrap_err();
@@ -79,7 +82,7 @@ pub async fn update_task_handler(task_id: &str, update_task: Json<ToDoTask>) -> 
     }
     
     // Update the task in the DB
-    let updated_task = edit_task_by_id(task_id, title, description, completed_at, owner).await;
+    let updated_task = edit_task_by_id(task_id, title, description, completed_at, Some(owner)).await;
 
     // If there was an error handle it
     if updated_task.is_err() {
@@ -101,7 +104,16 @@ pub async fn update_task_handler(task_id: &str, update_task: Json<ToDoTask>) -> 
 }
 
 #[delete("/tasks/<task_id>")]
-pub async fn delete_task_handler(task_id: &str) -> super::Response<Json<ToDoTask>> {
+pub async fn delete_task_handler(task_id: &str, jwt: JWT) -> super::Response<Json<ToDoTask>> {
+    // Verify the JWT
+    let user_id = verify_token(&jwt.token).await;
+
+    // Check if the user is the owner
+    let is_owner = check_is_owner(&user_id, task_id).await;
+    if is_owner.is_err() || !is_owner.unwrap() {
+        return Response::Forbidden("You are not the owner of the task".to_string())
+    }
+    
     // Delete the task
     let deleted_task = delete_task_by_id(task_id).await;
 
