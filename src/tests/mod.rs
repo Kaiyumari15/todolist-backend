@@ -1,2 +1,3 @@
-pub mod api;
-pub mod database;
+mod database;
+mod auth;
+mod api;
