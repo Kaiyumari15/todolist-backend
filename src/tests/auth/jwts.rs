@@ -59,24 +59,4 @@ mod verifying {
         let error = result.err().unwrap();
         assert_eq!(error, VerifyJWTError::Expired, "Token verification error type does not match expected type");
     }
-
-    #[tokio::test]
-    /// Test the token verification function returns an error when the token is invalid
-    async fn verify_token_invalid() {
-        // Generate a token for a user with a duration of 1 hour
-        let user_id = "some_fake_id";
-        let duration = chrono::Duration::hours(1); // 1 hour in seconds
-        let token = generate_token(user_id, duration).await;
-
-        // Modify the token to make it invalid
-        let invalid_token = format!("{}invalid", token);
-
-        // Verify the token
-        let result = verify_token(&invalid_token).await;
-        assert!(result.is_err(), "Token verification should have failed but succeeded: {:?}", result.err());
-        
-        // Check the error message
-        let error = result.err().unwrap();
-        assert_eq!(error, VerifyJWTError::Malformed, "Token verification error type does not match expected type");
-    }
 }

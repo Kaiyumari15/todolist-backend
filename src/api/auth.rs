@@ -1,7 +1,7 @@
-use std::sync::LazyLock;
+use std::{collections::HashSet, sync::LazyLock};
 
 use chrono::Duration;
-use jsonwebtoken::{encode, Algorithm, DecodingKey, EncodingKey, Header};
+use jsonwebtoken::{encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
 use rocket::{futures::future::Lazy, request::FromRequest};
 use serde::{Deserialize, Serialize};
 
@@ -33,21 +33,31 @@ pub async fn generate_token(user_id: &str, duration: Duration) -> String {
     };
 
     // Encode the token using the secret key
-    let token = encode(&Header::new(Algorithm::HS512), &claims, &*PRIVATE_KEY)
+    let token = encode(&Header::new(Algorithm::RS512), &claims, &*PRIVATE_KEY)
         .expect("Failed to encode token");
 
     token
 }
 
 pub async fn verify_token(token: &str) -> Result<Claims, VerifyJWTError> {
+    
+    // Set up the validation
+    let mut validation = Validation::new(Algorithm::RS512);
+    validation.validate_exp = true; // Validate expiration
+    validation.leeway = 0; // No leeway for expiration // used for accurate testing
+
     // Decode the token using the public key
     let token_data = jsonwebtoken::decode::<Claims>(
         token,
         &*PUBLIC_KEY,
-        &jsonwebtoken::Validation::new(Algorithm::HS512),
+        &validation
     )
-    .map_err(|error| {
-        VerifyJWTError::Other(error.to_string())
+    .map_err(|error: jsonwebtoken::errors::Error| {
+        match error.kind() {
+            jsonwebtoken::errors::ErrorKind::InvalidToken => VerifyJWTError::Malformed,
+            jsonwebtoken::errors::ErrorKind::ExpiredSignature => VerifyJWTError::Expired,
+            _ => VerifyJWTError::Other(error.to_string()),
+        }
     })?;
 
     // Return the claims
