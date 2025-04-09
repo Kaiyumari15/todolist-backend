@@ -112,7 +112,82 @@ mod editing {
 
 #[cfg(test)]
 mod signing_in {
+    use crate::database::users::{create_user, compare_email_password, compare_username_password};
+    use crate::database::{connect, clear_all_test};
 
+    async fn sign_in_username_password_correct() {
+        // Connect to the database and clear test data
+        let _ = connect().await;
+        let _ = clear_all_test().await;
+
+        // Create a user to sign in
+        let user = create_user("TESTuser", "TEST@example.com", "TESTpassword").await;
+
+        // Check there are no errors
+        assert!(user.is_ok(), "Failed to create user: {:?}", user.err());
+
+        // Sign in the user
+        let compare = compare_username_password("TESTuser", "TESTpassword").await;
+
+        // Check there are no errors
+        assert!(compare.is_ok(), "Failed to sign in user: {:?}", compare.err());
+        let compare = compare.unwrap();
+    }
+
+    async fn sign_in_email_password_correct() {
+        // Connect to the database and clear test data
+        let _ = connect().await;
+        let _ = clear_all_test().await;
+
+        // Create a user to sign in
+        let user = create_user("TESTuser", "TEST@example.com", "TESTpassword").await;
+
+        // Check there are no errors
+        assert!(user.is_ok(), "Failed to create user: {:?}", user.err());
+
+        // Sign in the user
+        let compare = compare_email_password("TEST@example.com", "TESTpassword").await;
+
+        // Check there are no errors
+        assert!(compare.is_ok(), "Failed to sign in user: {:?}", compare.err());
+        let compare = compare.unwrap();
+    }
+
+    async fn sign_in_username_password_incorrect() {
+        // Connect to the database and clear test data
+        let _ = connect().await;
+        let _ = clear_all_test().await;
+
+        // Create a user to sign in
+        let user = create_user(username, "TEST@example.com", "TESTpassword").await;
+
+        // Check there are no errors
+        assert!(user.is_ok(), "Failed to create user: {:?}", user.err());
+
+        // Sign in the user with incorrect password
+        let compare = compare_username_password("TESTuser", "WRONGpassword").await;
+
+        // Check there is an error
+        assert!(compare.is_err(), "Expected error when signing in with incorrect password");
+    }
+
+    async fn sign_in_email_password_incorrect() {
+        // Connect to the database and clear test data
+        let _ = connect().await;
+        let _ = clear_all_test().await;
+
+        // Create a user to sign in
+        let user = create_user("TESTuser", "TEST@example.com", "TESTpassword").await;
+
+        // Check there are no errors
+        assert!(user.is_ok(), "Failed to create user: {:?}", user.err());
+
+        // Sign in the user with incorrect password
+        let compare = compare_email_password("TEST@example.com", "WRONGpassword").await;
+
+        // Check there is an error
+        assert!(compare.is_err(), "Expected error when signing in with incorrect password");
+    }
 }
 
 #[cfg(test)]
