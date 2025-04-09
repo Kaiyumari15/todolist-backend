@@ -110,6 +110,74 @@ pub async fn compare_email_password(email: &str, password: &str) -> Result<User,
     Ok(result)
 }
 
+pub async fn edit_existing_user(id: &str, email: Option<&str>, username: Option<&str>, password: Option<&str>) -> Result<User, DBEditError> {
+
+    // Check not all inputs are NONE as this will create an invalid SQL statement
+    if email.is_none() && username.is_none() && password.is_none() {
+        return Err(DBEditError::BadData("Nothing to change".to_string()))
+    }
+
+    // Start the sql query
+    let mut sql = "UPDATE $id SET ".to_string();
+
+    // Take each value and make it a surrealdb::sql::value, if optional values are None then we set them to Value::Null
+    // I do this so i dont have to cast the type in the SQL statement, because that causes problems if the value is None
+    // This lets me keep the actual SQL as simple as possible
+    // This is the same as in create_task but we dont need created_at here
+    // Also create the sql string here depending on what parameters are passed in 
+    let email = match email {
+        Some(e) => {
+            sql.push_str("email = $email, ");
+            Value::from(e)
+        },
+        None => Value::None,
+    };
+    let username = match username {
+        Some(u) => {
+            sql.push_str("username = $username, ");
+            Value::from(u)
+        },
+        None => Value::None,
+    };
+    let password = match password {
+        Some(p) => {
+            sql.push_str("password = $password, ");
+            Value::from(p)
+        },
+        None => Value::None,
+    };
+
+    // Convert the id to a surrealdb::sql::value
+    // This means I dont have to case anything in the SQL
+    // I dont have to explicitly do this but I prefer to
+    let id: Value = Thing::from(("ToDoTask", id)).into();
+
+    // Remove the end space and end comma and add the return statement
+    sql.pop();
+    sql.push_str("RETURN $after;");
+
+    // Send the query
+    let mut response = DB.query(sql)
+        .bind(("id", id))
+        .bind(("email", email))
+        .bind(("username", username))
+        .bind(("password", password))
+        .await
+        .unwrap(); // This will only panic if the sql is malformed or there is a critical DB error
+
+    let result: Option<User> = response
+    .take(0)
+    .map_err(|e| {
+        DBEditError::Other(e.to_string())
+    })?;
+
+    let result = result.ok_or_else(|| {
+        DBEditError::NotFound("Failed to get task".to_string())
+    })?;
+    
+    Ok(result)
+}
+
 pub async fn delete_user(id: &str) -> Result<User, DBEditError> {
     // Create the query
     let sql = "DELETE ONLY $id RETURN BEFORE;";
