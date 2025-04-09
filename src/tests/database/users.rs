@@ -62,7 +62,52 @@ mod creating {
 
 #[cfg(test)]
 mod editing {
+    use crate::database::users::{create_user, edit_existing_user};
+    use crate::database::{connect, clear_all_test};
 
+    #[tokio::test]
+    /// Test correctly updating user information
+    async fn update_user_successfully() {
+        // Connect to the database and clear existing test data
+        let _ = connect().await;
+        let _ = clear_all_test().await;
+        
+        // Create a user to edit
+        let user = create_user("TESTuser", "TEST@example.com", "TESTpassword").await;
+
+        // Ensure there are no errors
+        assert!(user.is_ok(), "Couldn't create user: {:?}", user.err());
+        let user = user.unwrap();
+
+        // Edit the user
+        let id = user.id.unwrap().id.to_string();
+        let edited = edit_existing_user(&id, Some("TESTuserNEW"), Some("TESTnew@example.com"), Some("TESTnewpassword")).await;
+
+        // Ensure there are no errors
+        assert!(edited.is_ok(), "Couldn't edit user: {:?}", edited.err());
+    }
+
+    #[tokio::test]
+    /// Test calling the function with nothing to change
+    async fn update_user_none() {
+        // Connect to the database and clear all test data
+        let _ = connect().await;
+        let _ = clear_all_test().await;
+
+        // Create a user to edit
+        let user = create_user("TESTuser", "TEST@example.com", "TESTpassword").await;
+
+        // Check there are no errors
+        assert!(user.is_ok(), "Couldn't create user: {:?}", user.err());
+        let user = user.unwrap();
+
+        // Edit the user with nothing in the function
+        let id = user.id.unwrap().id.to_string();
+        let edited = edit_existing_user(&id, None, None, None).await;
+
+        // Check there is an error
+        assert!(edited.is_err(), "Expected error when updating user with nothing")
+    }
 }
 
 #[cfg(test)]

@@ -110,7 +110,7 @@ pub async fn compare_email_password(email: &str, password: &str) -> Result<User,
     Ok(result)
 }
 
-pub async fn edit_existing_user(id: &str, email: Option<&str>, username: Option<&str>, password: Option<&str>) -> Result<User, DBEditError> {
+pub async fn edit_existing_user(id: &str, username: Option<&str>, email: Option<&str>, password: Option<&str>) -> Result<User, DBEditError> {
 
     // Check not all inputs are NONE as this will create an invalid SQL statement
     if email.is_none() && username.is_none() && password.is_none() {
@@ -150,11 +150,12 @@ pub async fn edit_existing_user(id: &str, email: Option<&str>, username: Option<
     // Convert the id to a surrealdb::sql::value
     // This means I dont have to case anything in the SQL
     // I dont have to explicitly do this but I prefer to
-    let id: Value = Thing::from(("ToDoTask", id)).into();
+    let id: Value = Thing::from(("User", id)).into();
 
     // Remove the end space and end comma and add the return statement
     sql.pop();
-    sql.push_str("RETURN $after;");
+    sql.pop();
+    sql.push_str(" RETURN AFTER;");
 
     // Send the query
     let mut response = DB.query(sql)
