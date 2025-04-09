@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod creating {
-    use crate::database::{connect, clear_all_test};
+    use crate::database::{clear_all_test, connect, users::create_user};
 
     #[tokio::test]
     /// Test creating a user
@@ -14,7 +14,6 @@ mod creating {
 
         // Check there were no errors
         assert!(user.is_ok(), "Failed to create user: {:?}", user.err());
-        let user = user.unwrap();
     }
 
     #[tokio::test]
@@ -112,7 +111,7 @@ mod editing {
 mod signing_in {
     use crate::database::users::{create_user, compare_email_password, compare_username_password};
     use crate::database::{connect, clear_all_test};
-
+    #[allow(dead_code)]
     async fn sign_in_username_password_correct() {
         // Connect to the database and clear test data
         let _ = connect().await;
@@ -129,9 +128,9 @@ mod signing_in {
 
         // Check there are no errors
         assert!(compare.is_ok(), "Failed to sign in user: {:?}", compare.err());
-        let compare = compare.unwrap();
     }
 
+    #[allow(dead_code)]
     async fn sign_in_email_password_correct() {
         // Connect to the database and clear test data
         let _ = connect().await;
@@ -148,9 +147,9 @@ mod signing_in {
 
         // Check there are no errors
         assert!(compare.is_ok(), "Failed to sign in user: {:?}", compare.err());
-        let compare = compare.unwrap();
     }
 
+    #[allow(dead_code)]
     async fn sign_in_username_password_incorrect() {
         // Connect to the database and clear test data
         let _ = connect().await;
@@ -169,6 +168,7 @@ mod signing_in {
         assert!(compare.is_err(), "Expected error when signing in with incorrect password");
     }
 
+    #[allow(dead_code)]
     async fn sign_in_email_password_incorrect() {
         // Connect to the database and clear test data
         let _ = connect().await;

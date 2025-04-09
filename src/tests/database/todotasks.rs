@@ -1,8 +1,9 @@
 #[cfg(test)]
 mod creating {
-    use crate::database::{connect, clear_all_test, DB, todotask::create_task, users::create_user};
+    use crate::database::{connect, clear_all_test, todotask::create_task, users::create_user};
 
     #[tokio::test]
+    #[allow(dead_code)]
     /// Test creating a todo task
     /// This test will create a user and then create a todo task for that user.
     /// It will then check if the task was created successfully and if the fields are correct.
