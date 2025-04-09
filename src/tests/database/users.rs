@@ -1,8 +1,6 @@
-
 #[cfg(test)]
 mod creating {
-    use crate::database::users::create_user;
-    use crate::database::{DB, connect, clear_all_test};
+    use crate::database::{connect, clear_all_test};
 
     #[tokio::test]
     /// Test creating a user
@@ -159,7 +157,7 @@ mod signing_in {
         let _ = clear_all_test().await;
 
         // Create a user to sign in
-        let user = create_user(username, "TEST@example.com", "TESTpassword").await;
+        let user = create_user("TESTuser", "TEST@example.com", "TESTpassword").await;
 
         // Check there are no errors
         assert!(user.is_ok(), "Failed to create user: {:?}", user.err());
@@ -192,5 +190,28 @@ mod signing_in {
 
 #[cfg(test)]
 mod deleting {
+    use crate::database::users::{create_user, delete_user};
+    use crate::database::{connect, clear_all_test};
 
+    #[tokio::test]
+    /// Test deleting a user successfully
+    async fn delete_user_successfully() {
+        // Connect to the database and clear test data
+        let _ = connect().await;
+        let _ = clear_all_test().await;
+
+        // Create a user to delete
+        let user = create_user("TESTuser", "TEST@example.com", "TESTpassword").await;
+
+        // Ensure there are no errors
+        assert!(user.is_ok(), "Couldn't create user: {:?}", user.err());
+        let user = user.unwrap();
+
+        // Delete the user
+        let id = user.id.unwrap().id.to_string();
+        let deleted = delete_user(&id).await;
+
+        // Ensure there are no errors
+        assert!(deleted.is_ok(), "Couldn't delete user: {:?}", deleted.err());
+    }
 }
