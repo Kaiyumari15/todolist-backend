@@ -1,16 +1,25 @@
 pub mod todotask;
 pub mod users;
 
-use std::{fmt::Display, sync::LazyLock};
-use surrealdb::{engine::any::Any, opt::auth::Root, Surreal};
+use std::{fmt::Display, result, sync::LazyLock};
+use surrealdb::{engine::any::Any, error::Api, opt::auth::Root, Surreal};
 
 pub static DB:LazyLock<Surreal<Any>> = LazyLock::new(surrealdb::Surreal::init);
 
 /// Connects the static singleton DB to the database via WS, localhost:8000
 pub async fn connect() -> () {
-    DB.connect("ws://127.0.0.1:8000")
-        .await
-        .expect("Failed to connect to SurrealDB");
+
+    let _ = DB.connect("ws://127.0.0.1:8000")
+        .await;
+        // .map_err(|error| {
+        //     match &error {
+        //         surrealdb::Error::Api(api_error) => match api_error {
+        //             surrealdb::error::Api::AlreadyConnected => {} // If the database is already connected, we dont have to do anything
+        //             _ => panic!("Failed to connect to database: {}", error),
+        //         },
+        //         _ => panic!("Failed to connect to database: {}", error),
+        //     }
+        // });
     DB.use_ns("Dev").await.expect("Failed to use namespace 'Dev'");
     DB.use_db("Dev").await.expect("Failed to use database 'Dev'");
     DB.signin(Root {
@@ -52,8 +61,16 @@ pub async fn create_all() -> () {
 /// Should only be used in unit tests to prevent conflicts
 pub async fn clear_all_test() -> () {
     let sql = "
-    DELETE * FROM User WHERE username STARTSWTIH \"TEST\";
-    DELETE * FROM ToDoTask WHERE title STARTSWITH \"TEST\";";
+    DELETE User WHERE username CONTAINS \"TEST\";
+    DELETE ToDoTask WHERE title CONTAINS \"TEST\";";
+
+    let mut response = DB.query(sql)
+        .await
+        .expect("Failed to clear test data");
+
+    let result: Option<String> = response.take(0).expect("Failed to clear test data: ");
+
+    println!("Cleared test data: {:?}", result);
 }
 
 #[derive(Debug, Clone)]
