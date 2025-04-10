@@ -1,5 +1,6 @@
+use rocket::get;
 use rocket::{post, patch, delete, serde::json::Json};
-use crate::database::todotask::{check_is_owner, create_task, delete_task_by_id, edit_task_by_id};
+use crate::database::todotask::{check_is_owner, create_task, delete_task_by_id, edit_task_by_id, get_task_by_id, get_all_tasks_by_user};
 use crate::model::todotask::ToDoTask;
 use super::auth::{verify_token, JWT};
 use super::Response;
@@ -60,6 +61,75 @@ pub async fn create_task_handler(
     Response::Created(Json(task))
 }
 
+#[get("/tasks/<task_id>")]
+/// Get a task by ID
+/// This function handles the retrieval of a task by its ID.
+/// 
+/// # Arguments
+/// * `task_id` - The ID of the task to be retrieved.
+/// * `jwt` - A JWT token for authentication, which is passed in the request `Authorization` header.
+/// 
+/// # Returns
+/// * `Response<Json<ToDoTask>>` - A response indicating the result of the task retrieval process. If successful, it returns the task in JSON format.
+pub async fn get_task_handler(task_id: &str, jwt: JWT) -> super::Response<Json<ToDoTask>> {
+    // Verify the JWT and extract the user id
+    let user_id = verify_token(&jwt.token).await;
+    if user_id.is_err() {
+        return Response::Unauthorized("Invalid token".to_string())
+    }
+    let user_id = user_id.unwrap().sub;
+
+    // Check if the user is the owner of the task, return 403 if not
+    let is_owner = check_is_owner(task_id, &user_id).await;
+    if is_owner.is_err() || !is_owner.unwrap() {
+        return Response::Forbidden("You do not have permissions".to_string());
+    }
+
+    // If the user is the owner of the task, return the task
+    let task = get_task_by_id(task_id).await;
+    match task {
+        Ok(task) => Response::Ok(Json(task)),
+        Err(err) => match err {
+            crate::database::DBReadError::NotFound(_) => Response::NotFound("Task not found".to_string()),
+            crate::database::DBReadError::Other(_) => {
+                dbg!("Unhandled/Unknown error retrieving task: {:?}", err);
+                Response::InternalServerError("There was an unknown error".to_string())
+            }
+        }
+    }
+}
+
+#[get("/tasks")]
+/// Get all tasks by user ID
+/// This function handles the retrieval of all tasks associated with a specific user ID.
+/// 
+/// # Arguments
+/// * `jwt` - A JWT token for authentication, which is passed in the request `Authorization` header.
+/// 
+/// # Returns
+/// * `Response<Json<Vec<ToDoTask>>>` - A response indicating the result of the task retrieval process. If successful, it returns a list of tasks in JSON format.
+pub async fn get_tasks_by_user(jwt: JWT) -> super::Response<Json<Vec<ToDoTask>>> {
+    // Verify the JWT and extract the user id
+    let user_id = verify_token(&jwt.token).await;
+    if user_id.is_err() {
+        return Response::Unauthorized("Invalid token".to_string())
+    }
+    let user_id = user_id.unwrap().sub;
+
+    // Get all tasks by user ID
+    let tasks = get_all_tasks_by_user(&user_id).await;
+    match tasks {
+        Ok(tasks) => Response::Ok(Json(tasks)),
+        Err(err) => match err {
+            crate::database::DBReadError::NotFound(_) => Response::NotFound("No tasks found".to_string()),
+            crate::database::DBReadError::Other(_) => {
+                dbg!("Unhandled/Unknown error retrieving tasks: {:?}", err);
+                Response::InternalServerError("There was an unknown error".to_string())
+            }
+        }
+    }
+}
+
 #[patch("/tasks/<task_id>", data="<update_task>")]
 /// Update an existing task
 /// This function handles the update of an existing task by accepting a JSON payload containing the updated task's details.
@@ -76,7 +146,7 @@ pub async fn update_task_handler(task_id: &str, update_task: Json<ToDoTask>, jwt
     // Deserialise the input from JSON
     let update_task = update_task.into_inner();
 
-    // Verify the token and extracrt the user id 
+    // Verify the token and extract the user id 
     let user_id = verify_token(&jwt.token).await;
     if user_id.is_err() {
         return Response::Unauthorized("Invalid token".to_string())
