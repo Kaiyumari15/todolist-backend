@@ -4,6 +4,16 @@ use crate::model::users::User;
 
 use super::{DBCreateError, DBEditError, DBReadError, DB};
 
+
+/// Create a new user in the database
+/// 
+/// # Arguments
+/// * `username` - The username of the user
+/// * `email` - The email of the user
+/// * `password` - The password of the user
+/// 
+/// # Returns
+/// `Result<User, DBCreateError>` - The created user or an error
 pub async fn create_user(username: &str, email: &str, password: &str) -> Result<User, DBCreateError> {
     // Create the query
     let sql = "
@@ -48,6 +58,14 @@ pub async fn create_user(username: &str, email: &str, password: &str) -> Result<
     Ok(result)
 }
 
+/// Test a username/password combination 
+/// 
+/// # Arguments
+/// * `username` - The username of the user
+/// * `password` - The password of the user
+/// 
+/// # Returns
+/// `Result<User, DBReadError>` - The user if the username and password are correct, or an error
 pub async fn compare_username_password(username: &str, password: &str) -> Result<User, DBReadError> {
     // Create the query
     let sql = "SELECT * FROM User WHERE username = $username AND password = $password;";
@@ -79,6 +97,14 @@ pub async fn compare_username_password(username: &str, password: &str) -> Result
     Ok(result)
 }
 
+/// Test a email/password combination returning the User if correct
+/// 
+/// # Arguments
+/// * `email` - The email of the user
+/// * `password` - The password of the user
+/// 
+/// # Returns
+/// `Result<User, DBReadError>` - The user if the email and password are correct, or an error
 pub async fn compare_email_password(email: &str, password: &str) -> Result<User, DBReadError> {
     // Create the query
     let sql = "SELECT * FROM User WHERE email = $email AND password = $password;";
@@ -110,6 +136,17 @@ pub async fn compare_email_password(email: &str, password: &str) -> Result<User,
     Ok(result)
 }
 
+#[allow(dead_code)]
+/// Edit a user from the database by id
+/// 
+/// # Arguments
+/// * `id` - The id of the user to edit
+/// * `username` - The new username of the user
+/// * `email` - The new email of the user
+/// * `password` - The new password of the user
+/// 
+/// # Returns 
+/// `Result<User, DBEditError>` - The edited user or an error
 pub async fn edit_existing_user(id: &str, username: Option<&str>, email: Option<&str>, password: Option<&str>) -> Result<User, DBEditError> {
 
     // Check not all inputs are NONE as this will create an invalid SQL statement
@@ -179,6 +216,14 @@ pub async fn edit_existing_user(id: &str, username: Option<&str>, email: Option<
     Ok(result)
 }
 
+#[allow(dead_code)]
+/// Delete a user from the database
+/// 
+/// # Arguments
+/// * `id` - The id of the user to delete
+/// 
+/// # Returns
+/// `Result<User, DBEditError>` - The deleted user or an error
 pub async fn delete_user(id: &str) -> Result<User, DBEditError> {
     // Create the query
     let sql = "DELETE ONLY $id RETURN BEFORE;";

@@ -5,6 +5,15 @@ use super::auth::{verify_token, JWT};
 use super::Response;
 
 #[post("/tasks", data = "<input_task>")]
+/// Create a new task
+/// This function handles the creation of a new task by accepting a JSON payload containing the task's details.
+/// 
+/// # Arguments
+/// * `input_task` - A JSON payload containing the task's details, including title, description, and completed_at.
+/// * `jwt` - A JWT token for authentication, which is passed in the request `Authorization` header.
+/// 
+/// # Returns
+/// * `Response<Json<ToDoTask>>` - A response indicating the result of the task creation process. If successful, it returns the created task in JSON format.
 pub async fn create_task_handler(
     input_task: Json<ToDoTask>,
     jwt: JWT,
@@ -22,6 +31,7 @@ pub async fn create_task_handler(
     let title = input_task.title.as_deref();
     let description = input_task.description.as_deref();
     let completed_at = input_task.completed_at.as_deref();
+    let created_at = input_task.created_at.as_deref();
 
     // Check if the title is empty
     if title.is_none() {
@@ -30,7 +40,7 @@ pub async fn create_task_handler(
     let title = title.unwrap();
 
     // Create the task 
-    let created_task = create_task(&user_id, title, description, None, None).await;
+    let created_task = create_task(&user_id, title, description, completed_at, created_at).await;
 
     // Check if there was an error
     if created_task.is_err() {
@@ -51,6 +61,16 @@ pub async fn create_task_handler(
 }
 
 #[patch("/tasks/<task_id>", data="<update_task>")]
+/// Update an existing task
+/// This function handles the update of an existing task by accepting a JSON payload containing the updated task's details.
+/// 
+/// # Arguments
+/// * `task_id` - The ID of the task to be updated.
+/// * `update_task` - A JSON payload containing the updated task's details, including title, description, and completed_at.
+/// * `jwt` - A JWT token for authentication, which is passed in the request `Authorization` header.
+/// 
+/// # Returns
+/// * `Response<Json<ToDoTask>>` - A response indicating the result of the task update process. If successful, it returns the updated task in JSON format.
 pub async fn update_task_handler(task_id: &str, update_task: Json<ToDoTask>, jwt: JWT) -> super::Response<Json<ToDoTask>> {
 
     // Deserialise the input from JSON
@@ -112,6 +132,15 @@ pub async fn update_task_handler(task_id: &str, update_task: Json<ToDoTask>, jwt
 }
 
 #[delete("/tasks/<task_id>")]
+/// Delete a task
+/// This function handles the deletion of a task by its ID.
+/// 
+/// # Arguments
+/// * `task_id` - The ID of the task to be deleted.
+/// * `jwt` - A JWT token for authentication, which is passed in the request `Authorization` header.
+/// 
+/// # Returns
+/// * `Response<Json<ToDoTask>>` - A response indicating the result of the task deletion process. If successful, it returns the deleted task in JSON format.
 pub async fn delete_task_handler(task_id: &str, jwt: JWT) -> super::Response<Json<ToDoTask>> {
     // Verify the JWT
     let user_id = verify_token(&jwt.token).await;

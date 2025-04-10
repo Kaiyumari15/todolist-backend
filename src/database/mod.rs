@@ -1,12 +1,15 @@
 pub mod todotask;
 pub mod users;
 
-use std::{fmt::Display, result, sync::LazyLock};
-use surrealdb::{engine::any::Any, error::Api, opt::auth::Root, Surreal};
+use std::{fmt::Display, sync::LazyLock};
+use surrealdb::{engine::any::Any, opt::auth::Root, Surreal};
 
 pub static DB:LazyLock<Surreal<Any>> = LazyLock::new(surrealdb::Surreal::init);
 
 /// Connects the static singleton DB to the database via WS, localhost:8000
+/// 
+/// # Returns
+/// `()` - Nothing
 pub async fn connect() -> () {
 
     let _ = DB.connect("ws://127.0.0.1:8000")
@@ -28,6 +31,13 @@ pub async fn connect() -> () {
     }).await.expect("Failed to login as root user");
 }
 
+#[allow(dead_code)]
+/// Creates the tables and fields in the database
+/// This function is used to create the tables and fields in the database
+/// It is only used when setting up the database or during testing, not during production
+/// 
+/// # Returns
+/// `()` - Nothing
 pub async fn create_all() -> () {
     let mut response = DB.query("
     DEFINE TABLE User SCHEMAFULL;
@@ -57,8 +67,11 @@ pub async fn create_all() -> () {
     }
 }
 
-/// Used to clear everything in the database prefixed with 'TEST'
-/// Should only be used in unit tests to prevent conflicts
+#[allow(dead_code)]
+/// Clear all test data from the database
+/// 
+/// # Returns
+/// `()` - Nothing
 pub async fn clear_all_test() -> () {
     let sql = "
     DELETE User WHERE username CONTAINS \"TEST\";
@@ -74,15 +87,26 @@ pub async fn clear_all_test() -> () {
 }
 
 #[derive(Debug, Clone)]
-/// The error type which will be returned when creating a task in the database
+/// Error type returned when creating records in the database
+/// 
+/// # Variants
+/// * `AlreadyExists` - The record already exists in the database
+/// * `BadData` - The data provided is invalid
+/// * `Other` - Any other error that may occur
 pub enum DBCreateError {
+    #[allow(dead_code)]
     AlreadyExists(String),
     BadData(String),
     Other(String)
 }
 
 #[derive(Debug, Clone)]
-/// The error type which will be returned when editing a task in the database
+/// Error type returned when editing records in the database
+/// 
+/// # Variants
+/// * `NotFound` - The record was not found in the database
+/// * `BadData` - The data provided is invalid
+/// * `Other` - Any other error that may occur
 pub enum DBEditError {
     NotFound(String),
     BadData(String),
@@ -90,7 +114,11 @@ pub enum DBEditError {
 }
 
 #[derive(Debug, Clone)]
-/// The error type which will be returned when reading a task in the database
+/// Error type returned when reading records from the database
+/// 
+/// # Variants
+/// * `NotFound` - The record was not found in the database
+/// * `Other` - Any other error that may occur
 pub enum DBReadError {
     NotFound(String),
     Other(String),

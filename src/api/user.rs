@@ -6,6 +6,14 @@ use crate::{database::users::{compare_email_password, compare_username_password,
 use super::{auth::generate_token, Response};
 
 #[post("/users/sign-up", data = "<input_task>")]
+/// Create a new user
+/// This function handles the creation of a new user by accepting a JSON payload containing the user's details.
+/// 
+/// # Arguments
+/// * `input_task` - A JSON payload containing the user's details, including username, email, and password.
+/// 
+/// # Returns
+/// * `Response<String>` - A response indicating the result of the user creation process. If successful, it returns a JWT token for the user.
 pub async fn create_user_handler(
     input_task: Json<User>
 ) -> Response<String> {
@@ -60,6 +68,14 @@ pub async fn create_user_handler(
 }
 
 #[post("/users/log-in", data = "<input_user>")]
+/// Sign in a user
+/// This function handles the sign-in process for a user by accepting a JSON payload containing the user's credentials.
+/// 
+/// # Arguments
+/// * `input_user` - A JSON payload containing the user's credentials, including username or email and password.
+/// 
+/// # Returns
+/// * `Response<String>` - A response indicating the result of the sign-in process. If successful, it returns a JWT token for the user.
 pub async fn sign_in_user_handler(
     input_user: Json<User>
 ) -> Response<String> {
@@ -87,7 +103,6 @@ pub async fn sign_in_user_handler(
                     dbg!("Unhandled/Unkown error logging in user: {:?}", err);
                     Response::InternalServerError("There was an unkown error".to_string())
                 }
-                _ => Response::InternalServerError("There was an unkown error".to_string())
             }
         }
         user = compare_result.unwrap();
@@ -101,7 +116,6 @@ pub async fn sign_in_user_handler(
                     dbg!("Unhandled/Unkown error logging in user: {:?}", err);
                     Response::InternalServerError("There was an unkown error".to_string())
                 }
-                _ => Response::InternalServerError("There was an unkown error".to_string())
             }
         }
         user = compare_result.unwrap();

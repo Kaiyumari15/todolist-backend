@@ -4,6 +4,17 @@ use surrealdb::sql::{Value, Datetime as sdbDateTime, Thing};
 use crate::model::todotask::ToDoTask;
 use super::{DBCreateError, DBEditError, DBReadError, DB};
 
+/// Create a task in the database
+/// 
+/// # Arguments
+/// * `owner` - The id of the user that owns the task
+/// * `title` - The title of the task
+/// * `description` - The description of the task
+/// * `completed_at` - The time the task was completed
+/// * `created_at` - The time the task was created. Should only be used when 'uploading' a task created earlier offline
+/// 
+/// # Returns
+/// * `Result<ToDoTask, DBCreateError>` - The created task or an error
 pub async fn create_task(
     owner: &str,
     title: &str,
@@ -84,6 +95,14 @@ pub async fn create_task(
     Ok(result)
 }
 
+#[allow(dead_code)]
+/// Get a task from the database by id
+/// 
+/// # Arguments
+/// * `id` - The id of the task to get
+/// 
+/// # Returns
+/// * `Result<ToDoTask, DBReadError>` - The task or an error
 pub async fn get_task_by_id(
     id: &str,
 ) -> Result<ToDoTask, DBReadError> {
@@ -113,6 +132,14 @@ pub async fn get_task_by_id(
     Ok(result)
 }
 
+#[allow(dead_code)]
+/// Get all tasks from the database by user id
+/// 
+/// # Arguments
+/// * `user_id` - The id of the user to get tasks for
+/// 
+/// # Returns
+/// * `Result<Vec<ToDoTask>, DBReadError>` - The tasks or an error
 pub async fn get_all_tasks_by_user(
     user_id: &str,
 ) -> Result<Vec<ToDoTask>, DBReadError> {
@@ -141,6 +168,17 @@ pub async fn get_all_tasks_by_user(
 
 }
 
+/// Edit a task in the database by id
+/// 
+/// # Arguments
+/// * `id` - The id of the task to edit
+/// * `title` - The new title of the task
+/// * `description` - The new description of the task
+/// * `completed_at` - The new time the task was completed
+/// * `owner` - The new owner of the task
+/// 
+/// # Returns
+/// * `Result<ToDoTask, DBEditError>` - The edited task or an error
 pub async fn edit_task_by_id(
     id: &str,
     title: Option<&str>,
@@ -230,6 +268,13 @@ pub async fn edit_task_by_id(
     Ok(result)
 }
 
+/// Delete a task from the database by id
+/// 
+/// # Arguments
+/// * `id` - The id of the task to delete
+/// 
+/// # Returns
+/// * `Result<ToDoTask, DBReadError>` - The deleted task or an error
 pub async fn delete_task_by_id(
     id: &str,
 ) -> Result<ToDoTask, DBReadError> {
@@ -260,6 +305,15 @@ pub async fn delete_task_by_id(
     Ok(result)
 }
 
+
+/// Check if the requester is the owner of the task
+/// 
+/// # Arguments
+/// * `requester_id` - The id of the user making the request
+/// * `task_id` - The id of the task to check
+/// 
+/// # Returns
+/// * `Result<bool, DBReadError>` - True if the requester is the owner of the task, false otherwise, or an error 
 pub async fn check_is_owner(requester_id: &str, task_id: &str) -> Result<bool, DBReadError> {
     let sql = "SELECT owner FROM $id;";
 
