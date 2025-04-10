@@ -108,7 +108,7 @@ pub async fn get_task_handler(task_id: &str, jwt: JWT) -> super::Response<Json<T
 /// 
 /// # Returns
 /// * `Response<Json<Vec<ToDoTask>>>` - A response indicating the result of the task retrieval process. If successful, it returns a list of tasks in JSON format.
-pub async fn get_tasks_by_user(jwt: JWT) -> super::Response<Json<Vec<ToDoTask>>> {
+pub async fn get_tasks_by_user_handler(jwt: JWT) -> super::Response<Json<Vec<ToDoTask>>> {
     // Verify the JWT and extract the user id
     let user_id = verify_token(&jwt.token).await;
     if user_id.is_err() {
